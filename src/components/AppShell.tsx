@@ -1,39 +1,28 @@
-import { auth } from "@/lib/auth";
-import { carregarVisaoDoDia } from "@/lib/rotacaoServico";
-import { segundosAteMeiaNoite } from "@/lib/diaBrasilia";
-import { isAdminEmail } from "@/lib/admin";
-import Sidebar from "@/components/Sidebar";
-import HudHeader from "@/components/HudHeader";
-import BottomNav from "@/components/BottomNav";
+// ============================================================================
+// CASCO DO APP
+// ----------------------------------------------------------------------------
+// Partial Prerendering: este componente é gerado no build e servido na hora.
+//  - A navegação (barra lateral, cabeçalho, menu inferior) é dinâmica e fica em <Suspense>
+//    com esqueleto próprio.
+//  - O conteúdo da página (`children`) ocupa o casco: páginas estáticas já chegam prontas e
+//    as dinâmicas mostram o loading.tsx da própria rota até os dados chegarem.
+// ============================================================================
 
-export default async function AppShell({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+import { Suspense } from "react";
+import Navegacao from "@/components/Navegacao";
+import { EsqueletoDaNavegacao } from "@/components/EsqueletoDaPagina";
 
-  if (!session?.user) {
-    return <main className="min-h-screen">{children}</main>;
-  }
-
-  // Calculada uma vez por requisição (a página também usa a mesma visão).
-  const visao = await carregarVisaoDoDia(session.user.id);
-  const treinoEmAtraso = visao.estado.tipo === "TREINO_PENDENTE" && visao.estado.diasEmAtraso > 0;
-
+export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Sidebar
-        name={session.user.name ?? "Caçador"}
-        level={visao.nivel}
-        xp={visao.xp}
-        isPenalty={treinoEmAtraso}
-        isAdmin={isAdminEmail(session.user.email)}
-      />
-      {/* O dia vira à 00h de Brasília */}
-      <HudHeader secondsLeft={segundosAteMeiaNoite()} />
+      <Suspense fallback={<EsqueletoDaNavegacao />}>
+        <Navegacao />
+      </Suspense>
       <div className="lg:pl-72">
         <main className="relative pt-28 w-full px-gutter lg:px-gutter-desktop min-h-screen pb-24 lg:pb-12">
           {children}
         </main>
       </div>
-      <BottomNav />
     </>
   );
 }

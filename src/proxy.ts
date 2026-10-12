@@ -20,6 +20,11 @@ const PROTECTED_PREFIXES = [
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth?.user;
+
+  // A página inicial é estática; quem já tem sessão vai direto para o treino do dia.
+  if (req.nextUrl.pathname === "/" && isLoggedIn) {
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
+  }
   const isProtected = PROTECTED_PREFIXES.some((p) =>
     req.nextUrl.pathname.startsWith(p),
   );
@@ -32,6 +37,7 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
+    "/",
     "/dashboard/:path*",
     "/historico/:path*",
     "/rank/:path*",

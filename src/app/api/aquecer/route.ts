@@ -21,7 +21,6 @@ import {
   PAGINAS_PARA_AQUECER,
 } from "@/config/aquecimento";
 
-export const dynamic = "force-dynamic";
 
 // Em produção (https) o Auth.js usa este nome de cookie; ele também é o "salt" do JWT.
 const COOKIE_DE_SESSAO = "__Secure-authjs.session-token";

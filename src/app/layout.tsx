@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, Space_Mono } from "next/font/google";
-import AppShell from "@/components/AppShell";
 import { getBrand } from "@/lib/brand";
 import "./globals.css";
 
@@ -62,7 +61,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body
         style={brandVars}
         className="min-h-full bg-surface font-body text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(93,37,199,0.18),rgba(15,19,29,0))]">
-        <AppShell>{children}</AppShell>
+        {children}
       </body>
     </html>
   );

@@ -107,3 +107,29 @@ export function EsqueletoDeLista() {
     </div>
   );
 }
+
+/**
+ * Esqueleto da NAVEGAÇÃO (barra lateral no desktop, cabeçalho e menu inferior no celular).
+ * Faz parte do casco pré-renderizado: aparece vindo do CDN antes mesmo de a função acordar.
+ */
+export function EsqueletoDaNavegacao() {
+  return (
+    <div aria-hidden>
+      <aside className="fixed left-0 top-0 z-50 hidden h-full w-72 flex-col gap-4 bg-surface-container-lowest/90 p-6 backdrop-blur-2xl lg:flex">
+        <div className={`${LINHA} h-8 w-40`} />
+        <div className={`${LINHA} h-12 w-full`} />
+        {Array.from({ length: 8 }, (_, i) => (
+          <div key={i} className={`${LINHA} h-11 w-full`} />
+        ))}
+      </aside>
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-20 items-center gap-4 bg-surface-container-lowest/80 px-gutter backdrop-blur-xl lg:left-72 lg:px-gutter-desktop">
+        <div className={`${LINHA} h-9 w-48`} />
+      </header>
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-primary-container/20 bg-surface-container-lowest/95 px-2 py-3 lg:hidden">
+        {Array.from({ length: 5 }, (_, i) => (
+          <div key={i} className={`${LINHA} h-8 w-10`} />
+        ))}
+      </nav>
+    </div>
+  );
+}

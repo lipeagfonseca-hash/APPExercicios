@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { del } from "@vercel/blob";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { isAdminEmail } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
-import { BRAND_KEY_PREFIX, isBrandSlot, isBrandUrl, limparCacheDaMarca } from "@/lib/brand";
+import { BRAND_KEY_PREFIX, isBrandSlot, isBrandUrl } from "@/lib/brand";
 
 const putSchema = z.object({ slot: z.string(), url: z.string().max(500) });
 const deleteSchema = z.object({ slot: z.string() });
@@ -45,7 +45,8 @@ export async function PUT(request: Request) {
   });
   if (previous && previous.value !== url) await removeOldBlob(previous.value);
 
-  limparCacheDaMarca();
+  // expire: 0 = a próxima leitura já busca o valor novo (o admin vê a mudança na hora).
+  revalidateTag("brand", { expire: 0 });
   revalidatePath("/", "layout");
   return NextResponse.json({ ok: true });
 }
@@ -67,7 +68,8 @@ export async function DELETE(request: Request) {
     await removeOldBlob(previous.value);
   }
 
-  limparCacheDaMarca();
+  // expire: 0 = a próxima leitura já busca o valor novo (o admin vê a mudança na hora).
+  revalidateTag("brand", { expire: 0 });
   revalidatePath("/", "layout");
   return NextResponse.json({ ok: true });
 }

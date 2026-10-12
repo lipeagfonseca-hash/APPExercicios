@@ -4,7 +4,6 @@ import { catalogoExerciciosPorId } from "@/lib/catalogoExercicios";
 // Dado público e imutável entre deploys: gerado ESTÁTICO no build (um arquivo por
 // exercício, servido pelo CDN), sem função, sem banco e sem login.
 // O Cache-Control longo desta rota é definido em next.config.ts.
-export const dynamic = "force-static";
 
 export function generateStaticParams() {
   return [...catalogoExerciciosPorId.keys()].map((id) => ({ id }));

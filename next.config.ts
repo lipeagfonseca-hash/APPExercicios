@@ -32,6 +32,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Partial Prerendering: o "casco" da página (esqueleto/layout/conteúdo estático) é gerado no
+  // build e servido na hora; só as partes que dependem do usuário (sessão, banco) chegam depois,
+  // em streaming. Veja src/app/(app)/layout.tsx.
+  cacheComponents: true,
+  partialPrefetching: true,
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
