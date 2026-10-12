@@ -1,41 +1,31 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { catalogoExerciciosPorId } from "@/lib/catalogoExercicios";
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
-  }
+// Dado público e imutável entre deploys: gerado ESTÁTICO no build (um arquivo por
+// exercício, servido pelo CDN), sem função, sem banco e sem login.
+// O Cache-Control longo desta rota é definido em next.config.ts.
+export const dynamic = "force-static";
 
+export function generateStaticParams() {
+  return [...catalogoExerciciosPorId.keys()].map((id) => ({ id }));
+}
+
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!/^\d{4}$/.test(id)) {
-    return NextResponse.json({ error: "Exercício não encontrado." }, { status: 404 });
-  }
+  const e = catalogoExerciciosPorId.get(id);
+  if (!e) return NextResponse.json({ error: "Exercício não encontrado." }, { status: 404 });
 
-  const exercise = await prisma.exercise.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      namePt: true,
-      nameEn: true,
-      bodyPart: true,
-      equipment: true,
-      target: true,
-      secondary: true,
-      instructionsEn: true,
-      instructionsEs: true,
+  return NextResponse.json({
+    exercise: {
+      id: e.id,
+      namePt: e.nome,
+      nameEn: e.nomeEn,
+      bodyPart: e.regiao,
+      equipment: e.equipamento,
+      target: e.alvo,
+      secondary: e.secundarios,
+      instructionsEn: e.instrucoesEn,
+      instructionsEs: e.instrucoesEs,
     },
   });
-  if (!exercise) {
-    return NextResponse.json({ error: "Exercício não encontrado." }, { status: 404 });
-  }
-
-  return NextResponse.json(
-    { exercise },
-    { headers: { "Cache-Control": "private, max-age=86400" } },
-  );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { rankFromLevel, xpForLevel } from "@/lib/leveling";
 
@@ -28,6 +29,18 @@ const ADMIN_ITEM = { href: "/configuracoes", label: "CONFIGURAÇÕES", icon: "se
 
 export default function Sidebar({ name, level, xp, isPenalty, isAdmin }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Destaque OTIMISTA: o item clicado fica ativo na hora, antes de a página chegar.
+  // Guardamos de qual rota o clique partiu; quando a rota muda, o alvo deixa de valer.
+  const [alvo, setAlvo] = useState<{ href: string; de: string } | null>(null);
+  const hrefAtivo = alvo && alvo.de === pathname ? alvo.href : pathname;
+
+  // Prefetch só quando o usuário demonstra intenção (mouse, foco ou toque), e não das
+  // rotas dinâmicas inteiras ao abrir a página. O menu existe duas vezes no DOM
+  // (lateral e inferior); sem isso cada rota era buscada em dobro.
+  const prefetchSobDemanda = (href: string) => () => router.prefetch(href);
+
   const rank = rankFromLevel(level);
   const pct = Math.min(100, Math.round((xp / xpForLevel(level)) * 100));
 
@@ -70,11 +83,16 @@ export default function Sidebar({ name, level, xp, isPenalty, isAdmin }: Props) 
 
         <nav className="flex flex-col gap-1.5 px-4 pt-4">
           {(isAdmin ? [...NAV_ITEMS, ADMIN_ITEM] : NAV_ITEMS).map((item) => {
-            const active = pathname.startsWith(item.href);
+            const active = hrefAtivo.startsWith(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
+                onPointerEnter={prefetchSobDemanda(item.href)}
+                onFocus={prefetchSobDemanda(item.href)}
+                onTouchStart={prefetchSobDemanda(item.href)}
+                onClick={() => setAlvo({ href: item.href, de: pathname })}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all uppercase tracking-wider font-mono-label text-label-md ${
                   active
                     ? "bg-primary-container text-on-primary-container font-bold shadow-[0_0_20px_rgba(0,210,255,0.35)]"

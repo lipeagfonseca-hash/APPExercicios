@@ -14,7 +14,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { beep } from "@/lib/beep";
-import { exerciseGifUrl } from "@/lib/exerciseCatalog";
+import { exerciseGifUrl, exerciseThumbUrl } from "@/lib/exerciseCatalog";
 import { buildSegments, formatClock, totalSeconds } from "@/lib/timedProgram";
 import ExerciseDetailModal from "@/components/ExerciseDetailModal";
 import type { DetalheDoExercicio } from "@/lib/montarTreino";
@@ -49,7 +49,9 @@ type Props = {
   modo?: "missao" | "livre";
 };
 
-function Gif({ gifId, size, eager }: { gifId?: string; size: number; eager?: boolean }) {
+// Na lista usamos a imagem ESTÁTICA (miniatura de ~6 KB). O GIF animado (~90 KB) só é
+// carregado para o exercício em execução (`animado`), em vez de dezenas de GIFs ao mesmo tempo.
+function Gif({ gifId, size, eager, animado }: { gifId?: string; size: number; eager?: boolean; animado?: boolean }) {
   if (!gifId) {
     return (
       <span
@@ -63,7 +65,7 @@ function Gif({ gifId, size, eager }: { gifId?: string; size: number; eager?: boo
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={exerciseGifUrl(gifId)}
+      src={animado ? exerciseGifUrl(gifId) : exerciseThumbUrl(gifId)}
       alt=""
       width={size}
       height={size}
@@ -81,7 +83,6 @@ export default function TimedProgram({ program, rotulo, detalhes, modo = "missao
   const ehMissao = modo === "missao";
 
   const [erroDoServidor, setErroDoServidor] = useState<string | null>(null);
-  const [iniciando, setIniciando] = useState(false);
   const [resultado, setResultado] = useState<ResultadoDaConclusao | null>(null);
   const conclusaoEnviada = useRef(false);
   const segments = useMemo(() => buildSegments(program), [program]);
@@ -154,27 +155,26 @@ export default function TimedProgram({ program, rotulo, detalhes, modo = "missao
       .catch(() => setErroDoServidor("Sem conexão. Tente concluir novamente."));
   }, [ehMissao, state.status, router]);
 
-  async function iniciarTreino() {
+  // Início OTIMISTA: o cronômetro começa na hora (sem esperar o servidor). O registro do
+  // início vai em segundo plano; se o servidor recusar, o cronômetro volta ao começo e
+  // o motivo aparece na tela.
+  function iniciarTreino() {
     setErroDoServidor(null);
-    if (!ehMissao) {
-      dispatch({ type: "start" });
-      return;
-    }
-    setIniciando(true);
-    try {
-      const res = await fetch("/api/treino-do-dia/iniciar", { method: "POST" });
-      if (!res.ok) {
+    conclusaoEnviada.current = false;
+    dispatch({ type: "start" });
+    if (!ehMissao) return;
+
+    fetch("/api/treino-do-dia/iniciar", { method: "POST" })
+      .then(async (res) => {
+        if (res.ok) return;
         const dados = await res.json().catch(() => ({}));
+        dispatch({ type: "reset" });
         setErroDoServidor(dados.error ?? "Não foi possível iniciar o treino.");
-        return;
-      }
-      conclusaoEnviada.current = false;
-      dispatch({ type: "start" });
-    } catch {
-      setErroDoServidor("Sem conexão. Tente novamente.");
-    } finally {
-      setIniciando(false);
-    }
+      })
+      .catch(() => {
+        dispatch({ type: "reset" });
+        setErroDoServidor("Sem conexão. O treino não foi iniciado; tente novamente.");
+      });
   }
 
   const current = index >= 0 ? segments[index] : null;
@@ -268,7 +268,7 @@ export default function TimedProgram({ program, rotulo, detalhes, modo = "missao
           ) : (
             current && (
               <div className="flex flex-wrap items-center gap-4">
-                <Gif gifId={detalhes[nomeEmDestaque]?.gifId} size={120} eager />
+                <Gif gifId={detalhes[nomeEmDestaque]?.gifId} size={120} eager animado />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="font-mono-label text-label-sm uppercase tracking-wider text-on-surface-variant">
                     {current.kind === "pause"
@@ -388,10 +388,9 @@ export default function TimedProgram({ program, rotulo, detalhes, modo = "missao
           <button
             type="button"
             onClick={iniciarTreino}
-            disabled={iniciando}
-            className="rounded-lg bg-primary-container px-4 py-2 font-mono-label text-label-md uppercase tracking-wider text-on-primary-container hover:shadow-[0_0_20px_rgba(0,210,255,0.5)] disabled:opacity-50"
+            className="rounded-lg bg-primary-container px-4 py-2 font-mono-label text-label-md uppercase tracking-wider text-on-primary-container hover:shadow-[0_0_20px_rgba(0,210,255,0.5)]"
           >
-            {iniciando ? "Iniciando..." : ehMissao ? "Iniciar treino" : "Iniciar alongamento"}
+            {ehMissao ? "Iniciar treino" : "Iniciar alongamento"}
           </button>
           <span className="font-mono-label text-label-sm text-on-surface-variant">
             Cronômetro automático com beep a cada troca.

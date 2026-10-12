@@ -1,19 +1,8 @@
-import { prisma } from "@/lib/prisma";
+import { resumoDoCatalogo } from "@/lib/catalogoExercicios";
 import ExerciseGallery from "@/components/ExerciseGallery";
 
-export default async function ExercisesPage() {
-  const rows = await prisma.exercise.findMany({
-    select: {
-      id: true,
-      namePt: true,
-      nameEn: true,
-      bodyPart: true,
-      equipment: true,
-      target: true,
-    },
-    orderBy: { namePt: "asc" },
-  });
-
+// O catálogo é estático: nenhuma consulta ao banco para montar esta página.
+export default function ExercisesPage() {
   return (
     <div className="flex w-full flex-col gap-6">
       <h1 className="font-display text-headline-lg uppercase text-on-surface">
@@ -23,16 +12,7 @@ export default async function ExercisesPage() {
         Catálogo com demonstração de cada movimento. Toque em um exercício para
         ver o GIF e as instruções.
       </p>
-      <ExerciseGallery
-        exercises={rows.map((r) => ({
-          id: r.id,
-          name: r.namePt,
-          nameEn: r.nameEn,
-          bodyPart: r.bodyPart,
-          equipment: r.equipment,
-          target: r.target,
-        }))}
-      />
+      <ExerciseGallery exercises={resumoDoCatalogo} />
     </div>
   );
 }

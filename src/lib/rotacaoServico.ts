@@ -60,11 +60,10 @@ export type VisaoDoDia = {
 async function calcularVisaoDoDia(userId: string, agora: Date): Promise<VisaoDoDia> {
   const hoje = diaDeBrasilia(agora);
 
-  const perfil = await prisma.playerProfile.upsert({
-    where: { userId },
-    update: {},
-    create: { userId },
-  });
+  // Caso comum: 1 leitura. Só cria o perfil se ele ainda não existir (primeiro acesso).
+  const perfil =
+    (await prisma.playerProfile.findUnique({ where: { userId } })) ??
+    (await prisma.playerProfile.create({ data: { userId } }));
 
   // Perfil novo ainda não tem dia de início: a rotação começa hoje, no Treino 1.
   const ponteiroGuardado: Ponteiro = {

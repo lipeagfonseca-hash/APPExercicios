@@ -41,10 +41,10 @@ export default async function DashboardPage() {
   const session = await auth();
   const userId = session!.user.id;
 
-  const visao = await carregarVisaoDoDia(userId);
-  const { estado, ponteiro } = visao;
-
-  const [logs, recentes] = await Promise.all([
+  // Tudo em paralelo: a visão do dia, o log do sistema e os treinos recentes não dependem
+  // uns dos outros, então levam o tempo de UMA ida ao banco (e não de três em fila).
+  const [visao, logs, recentes] = await Promise.all([
+    carregarVisaoDoDia(userId),
     prisma.systemLog.findMany({
       where: { profile: { userId } },
       orderBy: { createdAt: "desc" },
@@ -56,6 +56,7 @@ export default async function DashboardPage() {
       take: 5,
     }),
   ]);
+  const { estado, ponteiro } = visao;
 
   const pctXp = Math.min(100, Math.round((visao.xp / visao.xpParaProximoNivel) * 100));
   const diasEmAtraso = estado.tipo === "TREINO_PENDENTE" ? estado.diasEmAtraso : 0;

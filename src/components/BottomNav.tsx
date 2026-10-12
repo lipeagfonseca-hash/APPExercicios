@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 const ITEMS = [
   { href: "/dashboard", label: "Missão", icon: "assignment_late" },
@@ -15,16 +16,33 @@ const ITEMS = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Destaque OTIMISTA: o item clicado fica ativo na hora, antes de a página chegar.
+  // Guardamos de qual rota o clique partiu; quando a rota muda, o alvo deixa de valer.
+  const [alvo, setAlvo] = useState<{ href: string; de: string } | null>(null);
+  const hrefAtivo = alvo && alvo.de === pathname ? alvo.href : pathname;
+
+  // Prefetch só quando o usuário demonstra intenção (mouse, foco ou toque), e não das
+  // rotas dinâmicas inteiras ao abrir a página. O menu existe duas vezes no DOM
+  // (lateral e inferior); sem isso cada rota era buscada em dobro.
+  const prefetchSobDemanda = (href: string) => () => router.prefetch(href);
+
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-primary-container/20 bg-surface-container-lowest/95 backdrop-blur lg:hidden">
       <div className="flex items-center justify-around px-2 py-2">
         {ITEMS.map((item) => {
-          const active = pathname.startsWith(item.href);
+          const active = hrefAtivo.startsWith(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
+              onPointerEnter={prefetchSobDemanda(item.href)}
+              onFocus={prefetchSobDemanda(item.href)}
+              onTouchStart={prefetchSobDemanda(item.href)}
+              onClick={() => setAlvo({ href: item.href, de: pathname })}
               className={`flex flex-col items-center gap-1 rounded px-2 py-1 font-mono-label text-label-sm ${
                 active ? "text-primary-container" : "text-on-surface-variant"
               }`}

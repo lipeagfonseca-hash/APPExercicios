@@ -1,14 +1,14 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
-import { clientIp, rateLimit } from "@/lib/rateLimit";
+import { authConfig } from "@/lib/auth.config";
 
-const DUMMY_HASH = bcrypt.hashSync("dummy-password-for-timing", 10);
+// bcrypt, banco e Redis só são necessários no LOGIN. Carregá-los de forma preguiçosa
+// (dentro do authorize) tira esse peso do cold start de todas as outras funções que
+// apenas leem a sessão com `auth()`.
+let hashFalso: string | null = null;
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  session: { strategy: "jwt" },
-  pages: { signIn: "/login" },
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -20,36 +20,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const password = credentials?.password as string | undefined;
         if (!email || !password) return null;
 
+        const [{ default: bcrypt }, { prisma }, { clientIp, rateLimit }] = await Promise.all([
+          import("bcryptjs"),
+          import("@/lib/prisma"),
+          import("@/lib/rateLimit"),
+        ]);
+
         const ip = clientIp(request.headers);
         const byIp = await rateLimit(`login:ip:${ip}`, 20, 15 * 60_000);
         const byAccount = await rateLimit(`login:acct:${email.toLowerCase()}`, 8, 15 * 60_000);
         if (!byIp.ok || !byAccount.ok) return null;
 
         const user = await prisma.user.findUnique({ where: { email } });
-        // Always run bcrypt so response time doesn't reveal whether the email exists.
-        const valid = await bcrypt.compare(password, user?.password ?? DUMMY_HASH);
+        // Sempre roda o bcrypt, mesmo sem usuário, para o tempo de resposta não revelar se o email existe.
+        hashFalso ??= bcrypt.hashSync("dummy-password-for-timing", 10);
+        const valid = await bcrypt.compare(password, user?.password ?? hashFalso);
         if (!user || !valid) return null;
 
         return { id: user.id, name: user.name, email: user.email };
       },
     }),
   ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.name = user.name;
-        token.email = user.email;
-      }
-      return token;
-    },
-    session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.name = token.name as string;
-        session.user.email = token.email as string;
-      }
-      return session;
-    },
-  },
 });

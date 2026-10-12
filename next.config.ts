@@ -5,8 +5,8 @@ const isDev = process.env.NODE_ENV !== "production";
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' data: https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
   "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
   "connect-src 'self' https://vercel.com https://*.blob.vercel-storage.com",
   "object-src 'none'",
@@ -35,6 +35,20 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      {
+        // Detalhe do exercício: dado público e estático (muda só com deploy). Cache longo no CDN.
+        source: "/api/exercicios/:id",
+        headers: [
+          { key: "Cache-Control", value: "public, s-maxage=86400, stale-while-revalidate=604800" },
+        ],
+      },
+      {
+        // Fonte dos ícones: arquivo fixo, cache longo e imutável (mude o nome ao regenerar).
+        source: "/fonts/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
       {
         // Catalog media is named by exercise id and never changes.
         source: "/exercises/:path*",

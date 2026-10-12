@@ -5,7 +5,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { isAdminEmail } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
-import { BRAND_KEY_PREFIX, isBrandSlot, isBrandUrl } from "@/lib/brand";
+import { BRAND_KEY_PREFIX, isBrandSlot, isBrandUrl, limparCacheDaMarca } from "@/lib/brand";
 
 const putSchema = z.object({ slot: z.string(), url: z.string().max(500) });
 const deleteSchema = z.object({ slot: z.string() });
@@ -45,6 +45,7 @@ export async function PUT(request: Request) {
   });
   if (previous && previous.value !== url) await removeOldBlob(previous.value);
 
+  limparCacheDaMarca();
   revalidatePath("/", "layout");
   return NextResponse.json({ ok: true });
 }
@@ -66,6 +67,7 @@ export async function DELETE(request: Request) {
     await removeOldBlob(previous.value);
   }
 
+  limparCacheDaMarca();
   revalidatePath("/", "layout");
   return NextResponse.json({ ok: true });
 }

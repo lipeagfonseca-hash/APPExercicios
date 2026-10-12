@@ -1,5 +1,10 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
+import { authConfig } from "@/lib/auth.config";
+
+// O proxy só precisa validar o JWT da sessão: usa a configuração LEVE (sem Prisma, bcrypt
+// ou Redis). Importar o `auth` completo aqui deixava o cold start de toda página lento.
+const { auth } = NextAuth(authConfig);
 
 const PROTECTED_PREFIXES = [
   "/dashboard",

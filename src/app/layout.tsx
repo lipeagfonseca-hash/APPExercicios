@@ -49,9 +49,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${spaceGrotesk.variable} ${inter.variable} ${spaceMono.variable} h-full antialiased dark`}
     >
       <head>
+        {/* Fonte dos ícones (subconjunto de ~4 KB, hospedado aqui): carregada já na primeira
+            resposta, sem pedir nada a servidores de terceiros. */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
-          rel="stylesheet"
+          rel="preload"
+          href="/fonts/material-symbols-icones.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
         />
       </head>
       <body
