@@ -1,33 +1,56 @@
+// ============================================================================
+// RANK E ATRIBUTOS
+// ----------------------------------------------------------------------------
+// Tudo vem do histórico real de treinos concluídos (veja src/lib/estatisticas.ts):
+//  - o rank de cada exercício vem do tempo de esforço acumulado nele;
+//  - os atributos (STR/AGI/END/VIT) são recalculados desse mesmo histórico.
+// ============================================================================
+
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { computeExerciseRanks } from "@/lib/rank";
+import { carregarEstatisticas } from "@/lib/estatisticas";
+import { DESCRICAO_DOS_ATRIBUTOS, type Atributo } from "@/lib/atributos";
 import { RankBadge, RankLadder } from "@/components/RankHexagon";
 import ShareCardButton from "@/components/ShareCardButton";
 
+const ORDEM_DOS_ATRIBUTOS: Atributo[] = ["STR", "AGI", "END", "VIT"];
+
+function formatarMinutos(minutos: number) {
+  return Number.isInteger(minutos) ? `${minutos} min` : `${minutos.toFixed(1).replace(".", ",")} min`;
+}
+
 export default async function RankPage() {
   const session = await auth();
-  const userId = session!.user.id;
-
-  const workouts = await prisma.workout.findMany({
-    where: { userId },
-    include: { exercises: { include: { sets: true } } },
-  });
-
-  const ranks = computeExerciseRanks(workouts);
+  const { ranks, atributos, treinosConcluidos } = await carregarEstatisticas(session!.user.id);
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <h1 className="font-display text-headline-lg uppercase text-on-surface">
-        Rank por exercício
-      </h1>
+      <h1 className="font-display text-headline-lg uppercase text-on-surface">Atributos</h1>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {ORDEM_DOS_ATRIBUTOS.map((chave) => (
+          <div
+            key={chave}
+            className="rounded-xl bg-surface-container-lowest/80 backdrop-blur-xl p-4"
+          >
+            <span className="font-mono-label text-label-sm uppercase tracking-wider text-on-surface-variant">
+              {chave} · {DESCRICAO_DOS_ATRIBUTOS[chave].nome}
+            </span>
+            <div className="font-display text-headline-md text-on-surface">{atributos[chave]}</div>
+            <p className="font-body text-[11px] leading-snug text-on-surface-variant">
+              {DESCRICAO_DOS_ATRIBUTOS[chave].comoCresce}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="font-display text-headline-md uppercase text-on-surface">Rank por exercício</h2>
       <p className="font-body text-body-md text-on-surface-variant max-w-2xl">
-        O rank mede sua evolução no exercício: do seu primeiro registro (E) até
-        o seu recorde atual (até SSS). Continue batendo recordes pra subir.
+        O rank de cada exercício cresce com o tempo de esforço acumulado nele (de E até SSS). Conclua os
+        treinos da rotação para subir.
       </p>
 
       {ranks.length === 0 ? (
         <p className="font-body text-body-sm text-on-surface-variant">
-          Registre treinos pra começar a ranquear seus exercícios.
+          Conclua um treino para começar a ranquear seus exercícios.
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -40,11 +63,12 @@ export default async function RankPage() {
                 <div>
                   <h2 className="font-display text-headline-sm text-on-surface">{row.name}</h2>
                   <p className="font-mono-label text-label-sm text-on-surface-variant">
-                    {row.type === "CARDIO"
-                      ? `${row.bestReps} reps no melhor treino`
-                      : row.bestWeight
-                        ? `${row.bestWeight}kg x ${row.bestReps} reps`
-                        : `${row.bestReps} reps (peso corporal)`}
+                    {formatarMinutos(row.minutos)} de esforço
+                  </p>
+                  <p className="font-mono-label text-label-sm text-primary">
+                    {row.proximo
+                      ? `Faltam ${formatarMinutos(row.proximo.faltamMinutos)} para o rank ${row.proximo.rank}`
+                      : "Rank máximo"}
                   </p>
                 </div>
                 <RankBadge rank={row.rank} size="lg" />
@@ -58,19 +82,8 @@ export default async function RankPage() {
                     title: row.name,
                     subtitle: `Rank ${row.rank}`,
                     stats: [
-                      {
-                        label: "Melhor marca",
-                        value:
-                          row.type === "CARDIO"
-                            ? `${row.bestReps} reps`
-                            : row.bestWeight
-                              ? `${row.bestWeight}kg x ${row.bestReps}`
-                              : `${row.bestReps} reps`,
-                      },
-                      {
-                        label: "Evolução",
-                        value: `${Math.round(row.growth * 100)}%`,
-                      },
+                      { label: "Esforço acumulado", value: formatarMinutos(row.minutos) },
+                      { label: "Treinos concluídos", value: String(treinosConcluidos) },
                     ],
                   }}
                 />

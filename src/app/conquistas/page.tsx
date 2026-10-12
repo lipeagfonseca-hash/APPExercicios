@@ -1,65 +1,32 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { computeExerciseRanks, EXERCISE_RANKS } from "@/lib/rank";
+import { carregarEstatisticas } from "@/lib/estatisticas";
+import { EXERCISE_RANKS, type ExerciseRank } from "@/lib/rank";
 import { accountAgeInDays, evaluateAchievements } from "@/lib/achievements";
 
 export default async function AchievementsPage() {
   const session = await auth();
   const userId = session!.user.id;
 
-  const [user, profile, workouts, treinosConcluidos] = await Promise.all([
+  const [user, estatisticas] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: userId } }),
-    prisma.playerProfile.upsert({
-      where: { userId },
-      update: {},
-      create: { userId },
-    }),
-    prisma.workout.findMany({
-      where: { userId },
-      include: { exercises: { include: { sets: true } } },
-    }),
-    prisma.treinoConcluido.count({ where: { userId } }),
+    carregarEstatisticas(userId),
   ]);
 
-  // Treinos antigos (com exercícios) + treinos da rotação concluídos.
-  const totalWorkouts = workouts.filter((w) => w.exercises.length > 0).length + treinosConcluidos;
-  let totalVolume = 0;
-  // Os treinos da rotação misturam força e cardio.
-  let hasStrength = treinosConcluidos > 0;
-  let hasCardio = treinosConcluidos > 0;
-
-  for (const workout of workouts) {
-    for (const exercise of workout.exercises) {
-      if (exercise.type === "CARDIO") hasCardio = true;
-      else hasStrength = true;
-      for (const set of exercise.sets) {
-        totalVolume += set.reps * (set.weightKg ?? 0);
-      }
-    }
-  }
-
-  const ranks = computeExerciseRanks(workouts);
-  const bestRank = ranks.reduce<(typeof EXERCISE_RANKS)[number] | null>(
-    (best, row) => {
-      if (!best) return row.rank;
-      return EXERCISE_RANKS.indexOf(row.rank) > EXERCISE_RANKS.indexOf(best)
-        ? row.rank
-        : best;
-    },
+  // Maior rank entre todos os exercícios.
+  const melhorRank = estatisticas.ranks.reduce<ExerciseRank | null>(
+    (melhor, linha) =>
+      melhor === null || EXERCISE_RANKS.indexOf(linha.rank) > EXERCISE_RANKS.indexOf(melhor) ? linha.rank : melhor,
     null,
   );
 
-  const accountAgeDays = accountAgeInDays(user.createdAt);
-
   const achievements = evaluateAchievements({
-    totalWorkouts,
-    totalVolume,
-    bestStreakDays: profile.bestStreakDays,
-    level: profile.level,
-    hasStrength,
-    hasCardio,
-    bestRank,
-    accountAgeDays,
+    treinosConcluidos: estatisticas.treinosConcluidos,
+    minutosDeEsforco: estatisticas.minutosDeEsforco,
+    melhorSequencia: estatisticas.perfil.bestStreakDays,
+    nivel: estatisticas.perfil.level,
+    melhorRank,
+    accountAgeDays: accountAgeInDays(user.createdAt),
   });
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length;

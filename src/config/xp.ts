@@ -54,3 +54,32 @@ export const NIVEL_INICIAL_DE_CADA_CLASSE = [
  * Ex.: treino de 575 s com 0,9 → mínimo de 518 s.
  */
 export const FRACAO_MINIMA_DA_DURACAO = 0.9;
+
+/**
+ * Rank de cada EXERCÍCIO, pelo tempo de esforço acumulado nele (em minutos).
+ * Calibrado para um ano perfeito de treino: os exercícios mais frequentes (cerca
+ * de 150 a 180 min/ano) chegam ao topo; os mais raros (30 min/ano) ficam em B.
+ */
+export const MINUTOS_PARA_CADA_RANK_DE_EXERCICIO = [
+  { rank: "E", minutos: 0 },
+  { rank: "D", minutos: 5 },
+  { rank: "C", minutos: 15 },
+  { rank: "B", minutos: 30 },
+  { rank: "A", minutos: 50 },
+  { rank: "S", minutos: 80 },
+  { rank: "SS", minutos: 120 },
+  { rank: "SSS", minutos: 160 },
+] as const;
+
+/** Título conquistado ao alcançar cada classe (efeito real: aparece no painel de recompensas). */
+export const TITULO_DE_CADA_CLASSE = {
+  E: "Caçador Novato",
+  D: "Caçador Dedicado",
+  C: "Caçador Veterano",
+  B: "Caçador de Elite",
+  A: "Mestre Caçador",
+  S: "Monarca",
+} as const;
+
+/** Pontos iniciais de cada atributo, antes de somar o que vem dos treinos. */
+export const PONTOS_BASE_DOS_ATRIBUTOS = 10;

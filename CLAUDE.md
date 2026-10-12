@@ -49,6 +49,11 @@ App de treino gamificado (Next.js 16 + Prisma 7 + Neon) com tema "Solo Leveling"
 - **Classes**: E (nível 1–9, a mais baixa), D (10), C (20), B (30), A (40), S (50, a mais alta). Simulação de 1 ano perfeito (4 treinos a cada 6 dias, usando a rotação real): D no dia 67, C 142, B 217, A 290, **S no dia 364**. Faltar treino zera a sequência (perde o bônus) e o treino continua pendente, então a classe S passa de 1 ano. Descanso/alongamento: sem XP, sem efeito na sequência.
 - O teste `src/lib/progressao.test.ts` falha se a classe S sair do intervalo dia 340–365 em um ano perfeito: **ao mexer em XP/bônus/custo, rode `npm test` e ajuste até fechar**.
 - `concluirTreinoDoDia` calcula `xpDoTreino(sequência)` no servidor, grava o XP real em `TreinoConcluido.xpConcedido` e devolve `xpBase`/`xpBonus`. O dashboard mostra "BÔNUS EM N TREINOS".
+- **Atributos reais** (`src/lib/atributos.ts`, calculados na hora, nada acumulado): STR/AGI/END = 10 + minutos de esforço nos exercícios com esse `atributo` (campo em `src/config/exercicios.ts`; END inclui as pausas ativas); VIT = 10 + treinos concluídos + melhor sequência. Mostrados em `/rank`.
+- **Rank por exercício = tempo de esforço acumulado** (`src/lib/rank.ts`; limites em minutos em `MINUTOS_PARA_CADA_RANK_DE_EXERCICIO`, calibrados para um ano perfeito: o exercício mais frequente chega a SSS, o mais raro a B; a pausa ativa não entra). O esforço vem de `src/lib/esforco.ts`: conta de quantas vezes cada treino foi concluído × os segmentos do treino **na configuração atual** (editar um treino reinterpreta o histórico).
+- **Recompensas com efeito real**: bônus de XP por sequência (automático) e **título por classe** (`TITULO_DE_CADA_CLASSE`), mostrados em `RecompensasPanel`. O "streak freeze" foi descartado por ora. **Conquistas** (`achievements.ts`) agora usam treinos concluídos, minutos de esforço, sequência, nível e rank de exercício.
+- `/historico` mostra treinos concluídos, minutos e XP; `src/lib/estatisticas.ts` (`carregarEstatisticas`, cache por requisição) alimenta Rank, Conquistas e Histórico.
+- As tabelas `Workout`/`WorkoutExercise`/`SetEntry` e as colunas `PlayerProfile.str/vit/agi/end` **não são mais usadas** (dados antigos de teste; limpeza na Fase 4).
 - Perfis antigos (só de teste) mantêm nível e XP; a curva nova só vale daqui para frente. Rank por exercício (`rank.ts`, E→SSS) é outra coisa e ainda baseado em repetições.
 
 ### Rotina de treino = Missão Diária (Fase 1, 2026-10-13)
@@ -60,7 +65,7 @@ O treino do dia **é** a missão. Não existe mais missão por repetições/km, 
 - **Banco**: `PlayerProfile.posicaoRotacao/itemDesde/sessaoIniciadaEm/sessaoTreinoId` e tabela `TreinoConcluido`. Migration `rotacao_treino_do_dia` tem `down.sql` ao lado.
 - **UI**: dashboard mostra treino pendente (`TimedProgram`, modo missão), "concluído hoje" ou descanso; `/programas` é só leitura; `/calendario` mostra concluídos reais + projeção. `Sidebar`/`HudHeader`/`AppShell` usam a mesma visão do dia.
 - **Testes**: `npm test` (`node --test`, sem dependência nova) cobre dia de Brasília e rotação. `src/lib/*.ts` puros usam imports relativos com `.ts` (`allowImportingTsExtensions`).
-- **Fases seguintes**: 3 (resto) = atributos STR/AGI/VIT/END derivados de dados reais, recompensas com efeito real (títulos/conquistas), rank por tempo (a aba Rank ainda usa repetições antigas) e limpeza do dashboard; 4 = limpeza dos "Missão Diária" vazios (mostrar antes de apagar) e auditoria das rotas de escrita.
+- **Fases seguintes**: 4 = limpeza dos "Missão Diária" vazios e dos dados antigos (mostrar antes de apagar), decidir o destino das tabelas `Workout*`/colunas de atributos, e auditoria das rotas de escrita.
 
 ### Treinos A–D e alongamentos (Fase 2, 2026-10-13)
 Tudo por **tempo** (nunca repetições), baixo impacto (sem saltos, burpee, afundo ou corrida), no máximo 10 min. O Mestre é obeso e está retomando a rotina: qualquer treino novo deve manter isso (apoio em parede/cadeira, pouco trabalho no chão, ritmo em que dá para conversar).
@@ -110,33 +115,28 @@ Tests: `npm test` (regras puras em `src/lib` e `src/config`; ver Fase 1/2/3 abai
 
 ## Architecture
 
-This is a Next.js 16 App Router fitness app skinned as a Solo Leveling-style "System" HUD (sidebar, HP/MP/Fadiga header, holographic quest card). Branding: **ARISE** / **SISTEMA**.
+This is a Next.js 16 App Router fitness app skinned as a Solo Leveling-style "System" HUD (sidebar, header com contagem até a virada do dia, cartão holográfico do treino). Branding: **ARISE** / **SISTEMA**.
 
 ### Data layer
 
 - **Database**: single Postgres instance (Neon, via Vercel's native integration). Local dev and production point at the *same* database — there is no separate dev DB. `.env.local` holds `DATABASE_URL` (pulled via `vercel env pull`).
 - **Prisma 7** uses the new driver-adapter architecture: `PrismaClient` must be constructed with an explicit adapter (`src/lib/prisma.ts` wires up `@prisma/adapter-pg`). Omitting the adapter throws at runtime, not at build time.
 - Generated client lives at `src/generated/prisma` (not `node_modules/.prisma`), imported as `@/generated/prisma/client`. Config is `prisma7.config.ts`, not `schema.prisma`-embedded env — it loads `.env.local` then `.env`.
-- Core models (`prisma/schema.prisma`): `User` → `Workout` → `WorkoutExercise` → `SetEntry` (reps + optional weightKg) is the raw workout log. `PlayerProfile` (1:1 with User) holds the RPG state: level/xp, four stats (str/vit/agi/end), streak tracking, `lastRewardClaimDate`. `SystemLog` is an append-only feed tied to `PlayerProfile`, rendered in the UI's "System Log" panel. `NutritionProfile` is separate and optional.
+- Modelos (`prisma/schema.prisma`): ver a lista em "The gamification engine" acima.
 
-### The gamification engine (`src/lib/`)
+### The gamification engine (`src/lib/` e `src/config/`)
 
-This is the part that spans multiple files and isn't obvious from any single one:
+Números e conteúdo vivem em `src/config/` (sem lógica); as regras são módulos **puros** em `src/lib/` (imports relativos com `.ts`, testados por `npm test`); o servidor liga tudo ao banco. Detalhes nas seções "Fase 1/2/3" acima. Resumo:
 
-- `leveling.ts` — pure functions: XP curve, rank letters (E→S), and `resolveDailyActivity()` which decides streak/penalty state from `lastActivityDate` vs "now" (UTC day boundaries only, never local time — see `toUtcDateOnly`).
-- `gains.ts` — `applyGainsForExercises()` is the single chokepoint that turns a set of logged exercises into XP/stat deltas and writes them to `PlayerProfile` + `SystemLog`. Both the free-form workout API and the daily-quest increment API call this; don't duplicate its logic.
-- `dailyQuest.ts` — the "Missão Diária" is **not** user-defined: it's four hardcoded objectives (100 push-ups / 100 sit-ups / 100 squats / 10km run) backed by a real `Workout` row named `"Missão Diária"` that gets created/updated for "today" (UTC). `QUEST_OBJECTIVES` exercise names must match what `trainingCycle`/`rank` expect verbatim.
-- `trainingCycle.ts` — a separate, deterministic 6-day cycle (2 HIIT workouts + 1 rest, repeated, intercalating 4 programs) computed from a fixed anchor date (`2024-01-01`), not from user data. Used by `/programas` (highlight today's program) and `/calendario` (month grid).
-- `rank.ts` — per-exercise E→SSS rank, computed on the fly (no stored rank) from all of a user's logged sets, grouped by exercise name. For bodyweight/no-weight sets it sums reps across the session; for weighted sets it takes the best single-set estimated 1RM (Epley). Rank = growth ratio vs that exercise's first-ever session.
-- `achievements.ts` — same pattern: evaluated live from aggregate stats, nothing persisted.
-- `hud.ts` — derives the cosmetic HP/MP/Fadiga numbers shown in the header from level + today's logged reps. These are flavor only, not a real mechanic.
-- `programs.ts` — static HIIT program definitions (the `Program`/`ProgramExercise` shape is also what `trainingCycle.ts` indexes by id).
+- `config/rotacao.ts`, `treinos.ts`, `exercicios.ts`, `parametrosDeTempo.ts`, `xp.ts` — sequência da rotação, treinos A–D, biblioteca de exercícios, tempos e economia de XP.
+- `lib/diaBrasilia.ts`, `rotacao.ts`, `montarTreino.ts`, `timedProgram.ts`, `progressao.ts`, `esforco.ts`, `atributos.ts`, `rank.ts`, `achievements.ts` — regras puras.
+- `lib/rotacaoServico.ts` (**único ponto que concede XP**: `concluirTreinoDoDia`, em transação) e `lib/estatisticas.ts` — acesso ao banco. Para dar XP/progresso, passe por `rotacaoServico`, não por fora.
+- `lib/leveling.ts` é só um atalho de compatibilidade (`rankFromLevel`, `xpForLevel`, `applyXp`) sobre `progressao.ts`.
+- Modelos principais: `PlayerProfile` (nível, XP, sequência, ponteiro da rotação), `TreinoConcluido` (um registro por treino do dia; `UNIQUE(userId, dia)`), `SystemLog`, `Exercise` (catálogo), `AppSetting` (identidade visual), `NutritionProfile`. `Workout*` e `SetEntry` são legados.
 
-When adding anything that awards XP/stats, go through `gains.ts`, not around it.
+### Request flow
 
-### Request flow for the quest UI
-
-`src/components/AppShell.tsx` (server component, wraps every route in `layout.tsx`) fetches the session, upserts `PlayerProfile`, and renders `Sidebar` + `HudHeader` + page content + `BottomNav`. Dashboard-specific widgets (`QuestCard`, `RewardsPanel`, `SystemLogPanel`) are client components that call `/api/daily-quest/increment` and `/api/daily-quest/claim`, then `router.refresh()` — this re-runs the server tree including `AppShell`, which is how the sidebar XP bar / header stay in sync after a client action.
+`src/components/AppShell.tsx` (server component, em volta de toda rota) chama `carregarVisaoDoDia` e renderiza `Sidebar` + `HudHeader` + página + `BottomNav`. O dashboard renderiza o `TimedProgram` (client) que chama `/api/treino-do-dia/iniciar` e `/concluir` e depois `router.refresh()`, o que reexecuta a árvore do servidor (inclusive o `AppShell`) e mantém barra de XP e menu em sincronia.
 
 ### Auth & routing
 
@@ -146,7 +146,7 @@ NextAuth v5 (credentials provider, bcrypt, JWT sessions) in `src/lib/auth.ts`. R
 
 Tailwind v4, no config file — theme tokens (colors, type scale, spacing) are defined as CSS custom properties in `src/app/globals.css` under `@theme`, following the exact Material-3-flavored token names from the original design spec (`primary-container`, `surface-container-lowest`, etc.) rather than Tailwind's defaults. Three font families via `next/font/google`, exposed as `font-display` (Space Grotesk headings), `font-body` (Inter), `font-mono-label` (Space Mono, used for all HUD numbers/labels/timers). Do not introduce ad-hoc Tailwind color classes (`cyan-500`, `neutral-800`, etc.) — use the theme tokens so pages stay visually consistent.
 
-Tailwind class names built with template-literal interpolation (e.g. `` `bg-${color}-container/20` ``) are **not** detected by the production build's static scanner and silently produce no styles — always use a lookup object of complete literal class strings instead (see `RewardsPanel.tsx` for the pattern).
+Tailwind class names built with template-literal interpolation (e.g. `` `bg-${color}-container/20` ``) are **not** detected by the production build's static scanner and silently produce no styles — always use a lookup object of complete literal class strings instead (use um objeto com strings literais completas, como em `calendario/page.tsx` `COR_DO_ITEM`).
 
 ## Gotchas
 

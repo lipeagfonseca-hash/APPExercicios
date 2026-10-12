@@ -10,13 +10,13 @@ import {
   YAxis,
 } from "recharts";
 
-type Point = { date: string; volume: number };
+type Point = { date: string; minutos: number };
 
 export default function HistoryChart({ data }: { data: Point[] }) {
   if (data.length === 0) {
     return (
       <p className="font-body text-body-sm text-on-surface-variant">
-        Registre treinos para ver seu progresso aqui.
+        Conclua treinos para ver seu progresso aqui.
       </p>
     );
   }
@@ -37,8 +37,8 @@ export default function HistoryChart({ data }: { data: Point[] }) {
           />
           <Line
             type="monotone"
-            dataKey="volume"
-            name="Volume (kg)"
+            dataKey="minutos"
+            name="Esforço (min)"
             stroke="#00d2ff"
             strokeWidth={2}
             dot={false}

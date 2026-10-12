@@ -19,6 +19,7 @@ import {
   treinoPorId,
 } from "@/config/treinos";
 import SystemLogPanel from "@/components/SystemLogPanel";
+import RecompensasPanel from "@/components/RecompensasPanel";
 import TimedProgram from "@/components/TimedProgram";
 
 /** "A" → "Treino A · Pernas Seguras"; "DESCANSO" → "Descanso". */
@@ -235,6 +236,12 @@ export default async function DashboardPage() {
           </section>
 
           <aside className="lg:col-span-4 flex flex-col gap-6">
+            <RecompensasPanel
+              nivel={visao.nivel}
+              xp={visao.xp}
+              xpParaProximoNivel={visao.xpParaProximoNivel}
+              treinosParaOBonus={visao.treinosParaOBonus}
+            />
             <SystemLogPanel logs={logs} />
             <div className="p-4 rounded-xl bg-tertiary-container/10 border border-tertiary-container/20 flex items-start gap-3">
               <span className="material-symbols-outlined text-tertiary text-[20px] shrink-0 mt-0.5">
