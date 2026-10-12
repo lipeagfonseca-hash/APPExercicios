@@ -56,3 +56,8 @@ export function segundosAteMeiaNoite(instante: Date = new Date()): number {
     .map(Number);
   return 86_400 - (hora * 3600 + minuto * 60 + segundo);
 }
+
+/** Hora cheia (0 a 23) no relógio de Brasília. Ex.: 2026-10-13T21:30:00Z → 18. */
+export function horaDeBrasilia(instante: Date = new Date()): number {
+  return Number(formatadorDeHora.format(instante).split(":")[0]);
+}

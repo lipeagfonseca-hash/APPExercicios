@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // One-off Node scripts (CommonJS).
     "scripts/**",
+    // Ferramentas/skills de agentes (fora do git; não fazem parte do app).
+    ".agents/**",
+    ".claude/**",
   ]),
 ]);
 
