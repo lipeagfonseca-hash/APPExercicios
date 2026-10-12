@@ -1,0 +1,71 @@
+# ============================================================================
+# Simple workflow — acompanha cada push e pull request
+# ----------------------------------------------------------------------------
+# O que faz: instala, roda lint, testes e build, e deixa um resumo do commit na
+# aba Actions. NÃO faz deploy e NÃO usa nenhum segredo (os valores abaixo são
+# falsos, só servem para o build compilar).
+# ============================================================================
+name: Simple workflow
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Menor permissão possível: só leitura do código.
+permissions:
+  contents: read
+
+# Um push novo cancela a execução anterior da mesma branch.
+concurrency:
+  group: simple-workflow-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Lint, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Valores falsos: o build não acessa banco nem serviços externos.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      AUTH_SECRET: ci-somente-para-build-nao-e-segredo
+
+    steps:
+      - name: Resumo do commit
+        env:
+          # Mensagem via variável de ambiente (nunca interpolada direto no shell).
+          MENSAGEM: ${{ github.event.head_commit.message || github.event.pull_request.title }}
+        run: |
+          {
+            echo "### Commit"
+            echo "- Evento: \`${{ github.event_name }}\`"
+            echo "- Branch: \`${{ github.ref_name }}\`"
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Autor: ${{ github.actor }}"
+            echo "- Mensagem: ${MENSAGEM%%$'\n'*}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Gerar o cliente do Prisma
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Testes
+        run: npm test
+
+      - name: Build
+        run: npm run build
