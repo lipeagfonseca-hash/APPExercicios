@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { beep } from "@/lib/beep";
 import { exerciseGifUrl } from "@/lib/exerciseCatalog";
 import { PROGRAM_EXERCISE_MEDIA } from "@/lib/programMedia";
 import { buildSegments, formatClock, totalSeconds } from "@/lib/timedProgram";
 import ExerciseDetailModal from "@/components/ExerciseDetailModal";
-import UseProgramButton from "@/components/UseProgramButton";
 import type { Program } from "@/lib/programs";
 
 type State =
@@ -48,8 +48,22 @@ function Gif({ name, size, eager }: { name: string; size: number; eager?: boolea
   );
 }
 
-export default function TimedProgram({ program }: { program: Program }) {
+type ResultadoDaConclusao = {
+  xpGanho: number;
+  subiuDeNivel: boolean;
+  nivel: number;
+  sequenciaAtual: number;
+};
+
+// Modo missão: o treino do dia é decidido pelo servidor. Aqui só se executa o
+// cronômetro; o início e a conclusão são registrados (e validados) no servidor.
+export default function TimedProgram({ program, rotulo }: { program: Program; rotulo: string }) {
+  const router = useRouter();
   const plan = program.timed!;
+  const [erroDoServidor, setErroDoServidor] = useState<string | null>(null);
+  const [iniciando, setIniciando] = useState(false);
+  const [resultado, setResultado] = useState<ResultadoDaConclusao | null>(null);
+  const conclusaoEnviada = useRef(false);
   const segments = useMemo(() => buildSegments(program), [program]);
   const total = totalSeconds(segments);
   const [detailName, setDetailName] = useState<string | null>(null);
@@ -103,6 +117,42 @@ export default function TimedProgram({ program }: { program: Program }) {
     if (state.status === "done") beep(660);
   }, [state.status]);
 
+  // Ao terminar o cronômetro, pede ao servidor para concluir (uma única vez por execução).
+  useEffect(() => {
+    if (state.status !== "done" || conclusaoEnviada.current) return;
+    conclusaoEnviada.current = true;
+    fetch("/api/treino-do-dia/concluir", { method: "POST" })
+      .then(async (res) => {
+        const dados = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setErroDoServidor(dados.error ?? "Não foi possível concluir o treino.");
+          return;
+        }
+        setResultado(dados);
+        router.refresh();
+      })
+      .catch(() => setErroDoServidor("Sem conexão. Tente concluir novamente."));
+  }, [state.status, router]);
+
+  async function iniciarTreino() {
+    setErroDoServidor(null);
+    setIniciando(true);
+    try {
+      const res = await fetch("/api/treino-do-dia/iniciar", { method: "POST" });
+      if (!res.ok) {
+        const dados = await res.json().catch(() => ({}));
+        setErroDoServidor(dados.error ?? "Não foi possível iniciar o treino.");
+        return;
+      }
+      conclusaoEnviada.current = false;
+      dispatch({ type: "start" });
+    } catch {
+      setErroDoServidor("Sem conexão. Tente novamente.");
+    } finally {
+      setIniciando(false);
+    }
+  }
+
   const current = index >= 0 ? segments[index] : null;
   const elapsedBefore = index >= 0 ? segments.slice(0, index).reduce((n, s) => n + s.seconds, 0) : 0;
   const leftTotal = index >= 0 ? total - elapsedBefore - (current!.seconds - remaining) : total;
@@ -116,7 +166,7 @@ export default function TimedProgram({ program }: { program: Program }) {
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div>
           <span className="font-mono-label text-label-md uppercase tracking-wider text-primary">
-            [PROGRAMA DO DIA]
+            [TREINO DO DIA · {rotulo.toUpperCase()}]
           </span>
           <h2 className="font-display text-headline-md text-on-surface">{program.name}</h2>
           <span className="font-mono-label text-label-sm text-on-surface-variant">
@@ -137,18 +187,28 @@ export default function TimedProgram({ program }: { program: Program }) {
       {state.status !== "idle" && (
         <div className="mb-4 rounded-lg border border-primary-container/30 bg-primary-container/10 p-4">
           {state.status === "done" ? (
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-col gap-2">
               <span className="font-display text-headline-sm text-primary">TREINO COMPLETO</span>
-              <div className="flex flex-wrap gap-2">
-                <UseProgramButton program={program} />
-                <button
-                  type="button"
-                  onClick={() => dispatch({ type: "reset" })}
-                  className="rounded-lg border border-primary-container/30 px-4 py-2 font-mono-label text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
-                >
-                  Reiniciar
-                </button>
-              </div>
+              {resultado ? (
+                <span className="font-mono-label text-label-md text-on-surface">
+                  MISSÃO CONCLUÍDA · +{resultado.xpGanho} XP
+                  {resultado.subiuDeNivel ? ` · NÍVEL ${resultado.nivel}!` : ""} · SEQUÊNCIA{" "}
+                  {resultado.sequenciaAtual}
+                </span>
+              ) : erroDoServidor ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="font-mono-label text-label-sm text-error">{erroDoServidor}</span>
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: "reset" })}
+                    className="rounded-lg border border-primary-container/30 px-4 py-2 font-mono-label text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface"
+                  >
+                    Refazer
+                  </button>
+                </div>
+              ) : (
+                <span className="font-mono-label text-label-sm text-on-surface-variant">Registrando no sistema...</span>
+              )}
             </div>
           ) : (
             current && (
@@ -272,14 +332,18 @@ export default function TimedProgram({ program }: { program: Program }) {
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button
             type="button"
-            onClick={() => dispatch({ type: "start" })}
-            className="rounded-lg bg-primary-container px-4 py-2 font-mono-label text-label-md uppercase tracking-wider text-on-primary-container hover:shadow-[0_0_20px_rgba(0,210,255,0.5)]"
+            onClick={iniciarTreino}
+            disabled={iniciando}
+            className="rounded-lg bg-primary-container px-4 py-2 font-mono-label text-label-md uppercase tracking-wider text-on-primary-container hover:shadow-[0_0_20px_rgba(0,210,255,0.5)] disabled:opacity-50"
           >
-            Iniciar treino
+            {iniciando ? "Iniciando..." : "Iniciar treino"}
           </button>
           <span className="font-mono-label text-label-sm text-on-surface-variant">
             Cronômetro automático com beep a cada troca.
           </span>
+          {erroDoServidor && (
+            <span className="font-mono-label text-label-sm text-error">{erroDoServidor}</span>
+          )}
         </div>
       )}
     </section>

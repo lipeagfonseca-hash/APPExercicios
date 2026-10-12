@@ -1,53 +1,17 @@
 import Countdown from "@/components/Countdown";
 
 type Props = {
-  hpMax: number;
-  mpMax: number;
-  fadiga: number;
   secondsLeft: number;
 };
 
-export default function HudHeader({ hpMax, mpMax, fadiga, secondsLeft }: Props) {
+export default function HudHeader({ secondsLeft }: Props) {
   return (
     <>
       <header className="fixed top-0 left-0 lg:left-72 right-0 h-20 bg-surface-container-lowest/80 backdrop-blur-xl z-40 px-gutter lg:px-gutter-desktop shadow-[0_1px_8px_rgba(0,0,0,0.4)] flex items-center justify-between">
         <div className="flex items-center gap-3 lg:gap-6 overflow-x-auto">
-          <div className="flex items-center gap-3 bg-surface-container-low/80 px-3.5 py-2 rounded-lg shrink-0">
-            <span className="font-mono-label text-label-sm font-bold text-error uppercase">
-              HP
-            </span>
-            <div className="w-20 lg:w-28 h-2 bg-surface-container-highest rounded-full overflow-hidden">
-              <div className="h-full bg-error rounded-full" style={{ width: "100%" }} />
-            </div>
-            <span className="font-mono-label text-label-sm text-on-surface hidden sm:inline">
-              {hpMax.toLocaleString("pt-BR")}/{hpMax.toLocaleString("pt-BR")}
-            </span>
-          </div>
-          <div className="flex items-center gap-3 bg-surface-container-low/80 px-3.5 py-2 rounded-lg shrink-0">
-            <span className="font-mono-label text-label-sm font-bold text-primary-container uppercase">
-              MP
-            </span>
-            <div className="w-16 lg:w-24 h-2 bg-surface-container-highest rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary-container rounded-full"
-                style={{ width: "100%" }}
-              />
-            </div>
-            <span className="font-mono-label text-label-sm text-on-surface hidden sm:inline">
-              {mpMax.toLocaleString("pt-BR")}/{mpMax.toLocaleString("pt-BR")}
-            </span>
-          </div>
-          <div className="hidden xl:flex items-center gap-2 bg-surface-container-low/80 px-3.5 py-2 rounded-lg shrink-0">
-            <span className="font-mono-label text-label-sm font-bold text-tertiary-fixed uppercase">
-              FADIGA
-            </span>
-            <span className="font-mono-label text-label-sm text-on-surface">
-              {fadiga}%
-            </span>
-          </div>
-          <div className="hidden 2xl:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-high/60 shrink-0">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-high/60 shrink-0">
             <span className="font-mono-label text-label-sm text-on-surface-variant uppercase">
-              TEMPO RESTANTE:
+              O DIA VIRA EM:
             </span>
             <Countdown
               initialSeconds={secondsLeft}
@@ -84,8 +48,8 @@ export default function HudHeader({ hpMax, mpMax, fadiga, secondsLeft }: Props) 
             ATENÇÃO:
           </span>
           <span className="font-body text-body-sm text-on-surface-variant">
-            A falta de cumprimento da Missão Diária resultará em Penalidade de
-            Sobrevivência.
+            O Treino do Dia é a sua Missão. Conclua o cronômetro até o fim para
+            ganhar XP.
           </span>
         </div>
       </div>

@@ -1,72 +1,63 @@
+// ============================================================================
+// DASHBOARD
+// ----------------------------------------------------------------------------
+// O treino do dia É a missão. O servidor decide qual é (ou se é descanso) a
+// partir do ponteiro da rotação; o usuário não escolhe.
+// ============================================================================
+
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import {
-  computeObjectiveProgress,
-  getOrCreateTodayQuestWorkout,
-  secondsUntilMidnightUtc,
-  todayUtcMidnight,
-} from "@/lib/dailyQuest";
-import { isInPenaltyZone, missedDays as computeMissedDays } from "@/lib/leveling";
-import QuestCard from "@/components/QuestCard";
-import RewardsPanel from "@/components/RewardsPanel";
+import { carregarVisaoDoDia } from "@/lib/rotacaoServico";
+import { formatClock } from "@/lib/timedProgram";
+import { ID_DO_DESCANSO, SEQUENCIA_DA_ROTACAO } from "@/config/rotacao";
+import { duracaoTotalEmSegundos, TREINOS, treinoPorId } from "@/config/treinos";
 import SystemLogPanel from "@/components/SystemLogPanel";
-import PenaltyModal from "@/components/PenaltyModal";
-import Timer from "@/components/Timer";
-import WorkoutForm from "@/components/WorkoutForm";
-import WorkoutList from "@/components/WorkoutList";
-import TodayProgram from "@/components/TodayProgram";
 import TimedProgram from "@/components/TimedProgram";
-import { getScheduleForDate } from "@/lib/trainingCycle";
-import { CIRCUIT_REST, PROGRAM_EXERCISE_MEDIA } from "@/lib/programMedia";
+
+/** "A" → "Treino A · Pernas Seguras"; "DESCANSO" → "Descanso". */
+function rotuloDoItem(item: string): string {
+  if (item === ID_DO_DESCANSO) return "Descanso";
+  // Registros antigos podem apontar para um treino que saiu da configuração.
+  const nome = TREINOS[item]?.name;
+  return nome ? `Treino ${item} · ${nome}` : `Treino ${item}`;
+}
+
+/** Item que vem depois do atual na rotação (ex.: posição 2 = Descanso → próximo é o Treino C). */
+function itemSeguinte(posicao: number): string {
+  return SEQUENCIA_DA_ROTACAO[(posicao + 1) % SEQUENCIA_DA_ROTACAO.length];
+}
+
+const CARTAO = "rounded-xl bg-surface-container-lowest/80 backdrop-blur-xl";
 
 export default async function DashboardPage() {
   const session = await auth();
   const userId = session!.user.id;
 
-  const [profile, questWorkout, logs, workouts] = await Promise.all([
-    prisma.playerProfile.upsert({
-      where: { userId },
-      update: {},
-      create: { userId },
-    }),
-    getOrCreateTodayQuestWorkout(userId),
+  const visao = await carregarVisaoDoDia(userId);
+  const { estado, ponteiro } = visao;
+
+  const [logs, recentes] = await Promise.all([
     prisma.systemLog.findMany({
       where: { profile: { userId } },
       orderBy: { createdAt: "desc" },
       take: 8,
     }),
-    prisma.workout.findMany({
+    prisma.treinoConcluido.findMany({
       where: { userId },
-      orderBy: { date: "desc" },
-      include: {
-        exercises: {
-          orderBy: { order: "asc" },
-          include: { sets: { orderBy: { order: "asc" } } },
-        },
-      },
+      orderBy: { createdAt: "desc" },
+      take: 5,
     }),
   ]);
 
-  const schedule = getScheduleForDate(new Date());
-  const objectives = computeObjectiveProgress(questWorkout);
-  const allComplete = objectives.every((o) => o.complete);
-  const now = new Date();
-  const isPenalty = isInPenaltyZone(profile.lastActivityDate, now);
-  const missed = computeMissedDays(profile.lastActivityDate, now);
-  const alreadyClaimed =
-    profile.lastRewardClaimDate &&
-    todayUtcMidnight(profile.lastRewardClaimDate).getTime() ===
-      todayUtcMidnight(now).getTime();
+  const pctXp = Math.min(100, Math.round((visao.xp / visao.xpParaProximoNivel) * 100));
+  const diasEmAtraso = estado.tipo === "TREINO_PENDENTE" ? estado.diasEmAtraso : 0;
 
-  const toneIndex = Math.min(
-    99,
-    Math.round((profile.str + profile.vit + profile.agi + profile.end) / 8),
-  );
+  // O que mostrar como "próximo treino da rotação".
+  const proximoDaRotacao =
+    estado.tipo === "TREINO_CONCLUIDO_HOJE" ? estado.proximo : itemSeguinte(ponteiro.posicao);
 
   return (
     <div className="flex flex-col w-full">
-      <PenaltyModal missedDays={missed} />
-
       <div className="relative w-full">
         <div className="absolute -top-10 left-1/4 w-96 h-96 bg-primary-container/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute top-1/3 right-10 w-80 h-80 bg-tertiary-container/10 rounded-full blur-[100px] pointer-events-none" />
@@ -79,142 +70,154 @@ export default async function DashboardPage() {
             </span>
           </div>
           <span className="font-mono-label text-label-sm text-on-surface-variant uppercase">
-            SINC. NEURAL: {isPenalty ? "INSTÁVEL" : "ESTÁVEL"}
+            SINC. NEURAL: {diasEmAtraso > 0 ? "INSTÁVEL" : "ESTÁVEL"}
           </span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter lg:gap-gutter-desktop items-start">
           <section className="lg:col-span-8 flex flex-col gap-6">
-            {schedule.type === "TRAIN" && schedule.program.timed ? (
-              <TimedProgram program={schedule.program} />
-            ) : schedule.type === "TRAIN" ? (
-              <TodayProgram
-                program={schedule.program}
-                exercises={schedule.program.exercises.map((ex) => ({
-                  name: ex.name,
-                  type: ex.type,
-                  rounds: ex.sets.length,
-                  reps: ex.sets[0]?.reps ?? 0,
-                  mediaId: PROGRAM_EXERCISE_MEDIA[ex.name] ?? null,
-                }))}
-                exerciseRest={CIRCUIT_REST.exerciseSeconds}
-                roundRest={CIRCUIT_REST.roundSeconds}
-              />
-            ) : (
-              <section className="rounded-xl bg-surface-container-lowest/80 backdrop-blur-xl p-5">
+            {/* ---------------- Treino do dia (a missão) ---------------- */}
+            {estado.tipo === "TREINO_PENDENTE" && (
+              <>
+                <div className={`${CARTAO} flex flex-wrap items-center justify-between gap-3 p-4`}>
+                  <div>
+                    <span className="font-mono-label text-label-sm uppercase tracking-wider text-on-surface-variant">
+                      MISSÃO DIÁRIA
+                    </span>
+                    <div className="font-display text-headline-sm text-on-surface">
+                      {rotuloDoItem(estado.item)}
+                    </div>
+                  </div>
+                  <div className="text-right font-mono-label text-label-sm text-on-surface-variant">
+                    <div>DURAÇÃO TOTAL: {formatClock(duracaoTotalEmSegundos(estado.item))}</div>
+                    <div className="text-primary">CONCLUA O CRONÔMETRO PARA GANHAR XP</div>
+                  </div>
+                </div>
+                <TimedProgram
+                  key={estado.item}
+                  program={treinoPorId(estado.item)}
+                  rotulo={`Treino ${estado.item}`}
+                />
+              </>
+            )}
+
+            {estado.tipo === "TREINO_CONCLUIDO_HOJE" && (
+              <section className={`${CARTAO} p-5 shadow-[0_0_25px_rgba(0,210,255,0.12)]`}>
                 <span className="font-mono-label text-label-md uppercase tracking-wider text-primary">
-                  [PROGRAMA DO DIA]
+                  [MISSÃO DIÁRIA CONCLUÍDA]
                 </span>
                 <h2 className="font-display text-headline-md text-on-surface">
-                  Dia de descanso
+                  Treino de hoje concluído
                 </h2>
                 <p className="mt-1 font-body text-body-sm text-on-surface-variant">
-                  Sem circuito hoje. Recupere, hidrate-se e cumpra a Missão Diária.
+                  Recupere-se. O próximo da rotação é{" "}
+                  <strong className="text-on-surface">{rotuloDoItem(estado.proximo)}</strong>, a partir de
+                  amanhã.
                 </p>
               </section>
             )}
 
-            <QuestCard
-              objectives={objectives}
-              secondsLeft={secondsUntilMidnightUtc()}
-            />
+            {estado.tipo === "DESCANSO" && (
+              <section className={`${CARTAO} p-5`}>
+                <span className="font-mono-label text-label-md uppercase tracking-wider text-primary">
+                  [DESCANSO / RECUPERAÇÃO]
+                </span>
+                <h2 className="font-display text-headline-md text-on-surface">Hoje é dia de descanso</h2>
+                <p className="mt-1 font-body text-body-sm text-on-surface-variant">
+                  Sem cronômetro obrigatório. Uma caminhada leve de 15 a 20 minutos ou alguns minutos de
+                  mobilidade ajudam a recuperar. Sua sequência não é afetada pelo descanso.
+                </p>
+                <p className="mt-2 font-mono-label text-label-sm text-on-surface-variant">
+                  PRÓXIMO: {rotuloDoItem(itemSeguinte(ponteiro.posicao))}
+                </p>
+              </section>
+            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-5 rounded-xl bg-surface-container-lowest/80 backdrop-blur-xl flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono-label text-label-md text-primary uppercase tracking-wider">
-                    [RESISTÊNCIA FÍSICA]
-                  </span>
-                  <span className="material-symbols-outlined text-primary-container text-[20px]">
-                    fitness_center
-                  </span>
+            {/* ---------------- Resumo: XP, sequência, próximo treino ---------------- */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className={`${CARTAO} p-4`}>
+                <span className="font-mono-label text-label-sm uppercase tracking-wider text-on-surface-variant">
+                  XP · NÍVEL {visao.nivel}
+                </span>
+                <div className="font-display text-headline-sm text-on-surface">
+                  {visao.xp} / {visao.xpParaProximoNivel}
                 </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="font-display text-headline-md text-on-surface">
-                      {toneIndex}%
-                    </span>
-                    <span className="block font-mono-label text-label-sm text-on-surface-variant">
-                      ÍNDICE DE TÔNUS MUSCULAR
-                    </span>
-                  </div>
-                  <div className="relative w-14 h-14 flex items-center justify-center">
-                    <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
-                      <path
-                        className="text-surface-container-highest"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3.5"
-                      />
-                      <path
-                        className="text-primary-container"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeDasharray={`${toneIndex}, 100`}
-                        strokeWidth="3.5"
-                      />
-                    </svg>
-                    <span className="absolute font-mono-label text-label-sm text-primary font-bold">
-                      {toneIndex}%
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-4 pt-3 border-t border-outline-variant/30 flex justify-between font-mono-label text-label-sm text-on-surface-variant">
-                  <span>STR: {profile.str}</span>
-                  <span className="text-primary">META: +1.0 STR/DIA</span>
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-container-highest">
+                  <div className="h-full rounded-full bg-primary-container" style={{ width: `${pctXp}%` }} />
                 </div>
               </div>
-
-              <div className="p-5 rounded-xl bg-error-container/20 backdrop-blur-xl flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono-label text-label-md text-error uppercase tracking-wider">
-                    [PUNIÇÃO DE SOBREVIVÊNCIA]
-                  </span>
-                  <span className="material-symbols-outlined text-error text-[20px]">
-                    timer
-                  </span>
+              <div className={`${CARTAO} p-4`}>
+                <span className="font-mono-label text-label-sm uppercase tracking-wider text-on-surface-variant">
+                  SEQUÊNCIA ATUAL
+                </span>
+                <div className="font-display text-headline-sm text-on-surface">
+                  {visao.sequenciaAtual} {visao.sequenciaAtual === 1 ? "treino" : "treinos"}
                 </div>
-                <div>
-                  <span className="font-display text-headline-md text-error tracking-tight">
-                    DESERTO DOS CENTÍPEDES
-                  </span>
-                  <span className="block font-mono-label text-label-sm text-on-error-container mt-1">
-                    Ambiente de calor extremo com bestas mágicas classe-D sem
-                    pausa.
-                  </span>
-                </div>
-                <div className="mt-4 pt-3 border-t border-error/20 flex justify-between font-mono-label text-label-sm text-error">
-                  <span>STATUS: {isPenalty ? "ATIVA" : "SUSPENSO"}</span>
-                  <span className="font-bold">
-                    {isPenalty ? `${missed} DIA(S) PENDENTE(S)` : "CONDICIONADO AO PRAZO"}
-                  </span>
+                <span className="font-mono-label text-label-sm text-on-surface-variant">
+                  RECORDE: {visao.melhorSequencia}
+                </span>
+              </div>
+              <div className={`${CARTAO} p-4`}>
+                <span className="font-mono-label text-label-sm uppercase tracking-wider text-on-surface-variant">
+                  PRÓXIMO DA ROTAÇÃO
+                </span>
+                <div className="font-display text-headline-sm text-on-surface">
+                  {rotuloDoItem(proximoDaRotacao)}
                 </div>
               </div>
             </div>
 
-            <Timer />
-            <WorkoutForm />
+            {/* Zona de penalidade: apenas narrativa, sem efeito mecânico. */}
+            <div className="p-5 rounded-xl bg-error-container/20 backdrop-blur-xl flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono-label text-label-md text-error uppercase tracking-wider">
+                  [ZONA DE PENALIDADE]
+                </span>
+                <span className="material-symbols-outlined text-error text-[20px]">timer</span>
+              </div>
+              <span className="font-display text-headline-md text-error tracking-tight">
+                DESERTO DOS CENTÍPEDES
+              </span>
+              <span className="block font-mono-label text-label-sm text-on-error-container mt-1">
+                Ambiente de calor extremo com bestas mágicas classe-D sem pausa.
+              </span>
+              <div className="mt-4 pt-3 border-t border-error/20 font-mono-label text-label-sm text-error">
+                {diasEmAtraso > 0
+                  ? `STATUS: ATIVA · ${diasEmAtraso} DIA(S) COM O TREINO EM ATRASO. CONCLUA O TREINO PARA SAIR.`
+                  : "STATUS: SUSPENSA"}
+              </div>
+            </div>
 
+            {/* ---------------- Treinos concluídos recentes ---------------- */}
             <div>
               <h2 className="mb-3 font-mono-label text-label-md uppercase tracking-wider text-primary">
                 Treinos recentes
               </h2>
-              <WorkoutList
-                workouts={workouts.map((w) => ({
-                  ...w,
-                  date: w.date.toISOString(),
-                }))}
-              />
+              {recentes.length === 0 ? (
+                <p className="font-body text-body-sm text-on-surface-variant">
+                  Nenhum treino concluído ainda.
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {recentes.map((r) => (
+                    <li
+                      key={r.id}
+                      className={`${CARTAO} flex items-center justify-between gap-3 px-4 py-2`}
+                    >
+                      <span className="font-body text-body-md text-on-surface">
+                        {rotuloDoItem(r.treinoId)}
+                      </span>
+                      <span className="font-mono-label text-label-sm text-on-surface-variant">
+                        {r.dia.split("-").reverse().join("/")} · +{r.xpConcedido} XP
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </section>
 
           <aside className="lg:col-span-4 flex flex-col gap-6">
-            <RewardsPanel
-              unlocked={allComplete}
-              alreadyClaimed={!!alreadyClaimed}
-            />
             <SystemLogPanel logs={logs} />
             <div className="p-4 rounded-xl bg-tertiary-container/10 border border-tertiary-container/20 flex items-start gap-3">
               <span className="material-symbols-outlined text-tertiary text-[20px] shrink-0 mt-0.5">
@@ -225,8 +228,7 @@ export default async function DashboardPage() {
                   AURA DE MONARCA
                 </span>
                 <span className="font-body text-body-sm text-on-surface leading-tight mt-0.5">
-                  A disciplina continuada converte esforço físico bruto em
-                  mana latente para o Despertar.
+                  A disciplina continuada converte esforço físico bruto em mana latente para o Despertar.
                 </span>
               </div>
             </div>

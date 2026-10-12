@@ -13,32 +13,38 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String
-  email         String         @unique
-  password      String
-  createdAt     DateTime       @default(now())
-  workouts        Workout[]
-  playerProfile   PlayerProfile?
-  nutritionProfile NutritionProfile?
+  id                String            @id @default(cuid())
+  name              String
+  email             String            @unique
+  password          String
+  createdAt         DateTime          @default(now())
+  workouts          Workout[]
+  playerProfile     PlayerProfile?
+  nutritionProfile  NutritionProfile?
+  treinosConcluidos TreinoConcluido[]
 }
 
 model PlayerProfile {
-  id               String    @id @default(cuid())
-  userId           String    @unique
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  level            Int       @default(1)
-  xp               Int       @default(0)
-  str              Int       @default(10)
-  vit              Int       @default(10)
-  agi              Int       @default(10)
-  end              Int       @default(10)
-  streakDays       Int       @default(0)
-  bestStreakDays   Int       @default(0)
-  lastActivityDate DateTime?
+  id                  String      @id @default(cuid())
+  userId              String      @unique
+  user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level               Int         @default(1)
+  xp                  Int         @default(0)
+  str                 Int         @default(10)
+  vit                 Int         @default(10)
+  agi                 Int         @default(10)
+  end                 Int         @default(10)
+  streakDays          Int         @default(0)
+  bestStreakDays      Int         @default(0)
+  lastActivityDate    DateTime?
   lastRewardClaimDate DateTime?
-  updatedAt        DateTime  @updatedAt
-  logs             SystemLog[]
+  // --- Rotação de treinos (veja src/lib/rotacao.ts) ---
+  posicaoRotacao      Int         @default(0)
+  itemDesde           String? // dia (Brasília, "AAAA-MM-DD") em que o item atual passou a valer
+  sessaoIniciadaEm    DateTime? // quando o usuário apertou INICIAR TREINO
+  sessaoTreinoId      String? // treino da sessão iniciada
+  updatedAt           DateTime    @updatedAt
+  logs                SystemLog[]
 }
 
 model SystemLog {
@@ -142,4 +148,21 @@ model Exercise {
 
   @@index([bodyPart])
   @@index([equipment])
+}
+
+// Um registro por treino do dia concluído. UNIQUE(userId, dia) garante, no banco,
+// que o XP é concedido uma única vez por dia (mesmo com cliques duplos ou recarga).
+model TreinoConcluido {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dia             String // dia de Brasília, "AAAA-MM-DD"
+  treinoId        String // "A", "B", "C", "D"...
+  posicao         Int // posição na rotação no momento da conclusão
+  xpConcedido     Int
+  duracaoSegundos Int
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, dia])
+  @@index([userId, createdAt])
 }

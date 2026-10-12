@@ -41,6 +41,3 @@ export const PROGRAM_EXERCISE_MEDIA: Record<string, string> = {
   "Marcha acelerada": "3636",
   "Marcha estática": "3636",
 };
-
-// Rest rules from the program descriptions (HIIT Q48): 20s between exercises, 1min between rounds.
-export const CIRCUIT_REST = { exerciseSeconds: 20, roundSeconds: 60 };

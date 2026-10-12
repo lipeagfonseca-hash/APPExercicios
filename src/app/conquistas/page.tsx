@@ -7,7 +7,7 @@ export default async function AchievementsPage() {
   const session = await auth();
   const userId = session!.user.id;
 
-  const [user, profile, workouts] = await Promise.all([
+  const [user, profile, workouts, treinosConcluidos] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: userId } }),
     prisma.playerProfile.upsert({
       where: { userId },
@@ -18,12 +18,15 @@ export default async function AchievementsPage() {
       where: { userId },
       include: { exercises: { include: { sets: true } } },
     }),
+    prisma.treinoConcluido.count({ where: { userId } }),
   ]);
 
-  const totalWorkouts = workouts.length;
+  // Treinos antigos (com exercícios) + treinos da rotação concluídos.
+  const totalWorkouts = workouts.filter((w) => w.exercises.length > 0).length + treinosConcluidos;
   let totalVolume = 0;
-  let hasStrength = false;
-  let hasCardio = false;
+  // Os treinos da rotação misturam força e cardio.
+  let hasStrength = treinosConcluidos > 0;
+  let hasCardio = treinosConcluidos > 0;
 
   for (const workout of workouts) {
     for (const exercise of workout.exercises) {
