@@ -12,7 +12,7 @@ App de treino gamificado (Next.js 16 + Prisma 7 + Neon) com tema "Solo Leveling"
 - **Vercel Blob público** (`BLOB_READ_WRITE_TOKEN`) — imagens da identidade visual.
 - **`ADMIN_EMAILS`** (env, produção/preview/dev) — lista de admins separados por vírgula; vazio = ninguém é admin. Email do admin: ver `CLAUDE.local.md` (senha nunca em arquivo).
 
-**Estado do código:** `npm run build` passa; `npm run lint` tem 0 erros e 2 warnings de fonte em `layout.tsx` (link do Material Symbols). Não há suíte de testes.
+**Estado do código:** `npm run build` passa; `npm run lint` tem 0 erros e 2 warnings de fonte em `layout.tsx` (link do Material Symbols). `npm test` roda os testes das regras puras (`node --test`, sem dependência nova).
 
 ### Segurança aplicada (baseada na nota "Segurança em apps web" do vault Obsidian `08 - Aprendizados`)
 - Headers em `next.config.ts`: CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS, sem `X-Powered-By`. A CSP libera `fonts.googleapis.com`/`gstatic` e o domínio do Blob (`img-src` e `connect-src`); mantém `'unsafe-inline'` em scripts.
@@ -43,16 +43,24 @@ App de treino gamificado (Next.js 16 + Prisma 7 + Neon) com tema "Solo Leveling"
 - As actions usam a tag de major `@v7` (`checkout`, `setup-node`); a `@v4` rodava em Node 20, já obsoleto. Para atualizar no futuro: conferir `gh api repos/actions/<nome>/releases/latest` e trocar nos dois workflows.
 - Commits: mensagem em português, uma fase/assunto por commit, terminando com o `Co-Authored-By` exigido. Fase 1 e CI já estão publicados.
 
+### XP, níveis e classes (Fase 3, 2026-10-13)
+**Meta de design: da classe E à S em 1 ano de treino ininterrupto.** Tudo em `src/config/xp.ts`; contas em `src/lib/progressao.ts` (puro); `src/lib/leveling.ts` é só um atalho de compatibilidade (`rankFromLevel`, `xpForLevel`, `applyXp`).
+- **100 XP por treino** + **200 de bônus a cada 5 treinos seguidos** (5º, 10º...) + **690 XP por nível** (faixas em `FAIXAS_DE_XP_POR_NIVEL`, dá para fazer curva progressiva). Dá 1 nível a cada 5 treinos (~7–8 dias).
+- **Classes**: E (nível 1–9, a mais baixa), D (10), C (20), B (30), A (40), S (50, a mais alta). Simulação de 1 ano perfeito (4 treinos a cada 6 dias, usando a rotação real): D no dia 67, C 142, B 217, A 290, **S no dia 364**. Faltar treino zera a sequência (perde o bônus) e o treino continua pendente, então a classe S passa de 1 ano. Descanso/alongamento: sem XP, sem efeito na sequência.
+- O teste `src/lib/progressao.test.ts` falha se a classe S sair do intervalo dia 340–365 em um ano perfeito: **ao mexer em XP/bônus/custo, rode `npm test` e ajuste até fechar**.
+- `concluirTreinoDoDia` calcula `xpDoTreino(sequência)` no servidor, grava o XP real em `TreinoConcluido.xpConcedido` e devolve `xpBase`/`xpBonus`. O dashboard mostra "BÔNUS EM N TREINOS".
+- Perfis antigos (só de teste) mantêm nível e XP; a curva nova só vale daqui para frente. Rank por exercício (`rank.ts`, E→SSS) é outra coisa e ainda baseado em repetições.
+
 ### Rotina de treino = Missão Diária (Fase 1, 2026-10-13)
 O treino do dia **é** a missão. Não existe mais missão por repetições/km, "+5 REPS", Treino Livre, `/api/daily-quest/*`, `/api/workouts*`, `dailyQuest.ts`, `gains.ts`, `hud.ts` (HP/MP/Fadiga) nem punição de XP. Regras e onde ficam:
 - **Dia = 00h de Brasília** (`America/Sao_Paulo`), string "AAAA-MM-DD" (`src/lib/diaBrasilia.ts`). Isto **substitui** a antiga regra de "UTC em tudo" para a rotina de treino.
-- **Configuração** (sem lógica): `src/config/rotacao.ts` (sequência `A,B,DESCANSO,C,D,DESCANSO`), `src/config/treinos.ts` (A–D; o build falha se algum passar de 600 s), `src/config/xp.ts` (XP por treino = 50; fração mínima de tempo = 0,9).
+- **Configuração** (sem lógica): `src/config/rotacao.ts` (sequência `A,B,DESCANSO,C,D,DESCANSO`), `src/config/treinos.ts` (A–D; o build falha se algum passar de 600 s), `src/config/xp.ts` (XP, bônus, níveis e classes; fração mínima de tempo = 0,9).
 - **Regras puras e testadas**: `src/lib/rotacao.ts` (ponteiro, estado do dia, projeção, sequência). Treino não concluído **continua pendente** no dia seguinte; concluir avança o ponteiro e o próximo vale **desde amanhã**; descanso passa sozinho quando o dia vira; descanso não quebra a sequência; só treino atrasado a zera.
 - **Servidor**: `src/lib/rotacaoServico.ts` (`carregarVisaoDoDia` cacheada por requisição, `registrarInicioDoTreino`, `concluirTreinoDoDia` em transação). Rotas `POST /api/treino-do-dia/iniciar` e `/concluir` (sessão + rate limit). XP único por dia garantido por `UNIQUE(userId, dia)` em `TreinoConcluido`; conclusão exige ter iniciado e esperado >= 90% da duração (valida no servidor).
 - **Banco**: `PlayerProfile.posicaoRotacao/itemDesde/sessaoIniciadaEm/sessaoTreinoId` e tabela `TreinoConcluido`. Migration `rotacao_treino_do_dia` tem `down.sql` ao lado.
 - **UI**: dashboard mostra treino pendente (`TimedProgram`, modo missão), "concluído hoje" ou descanso; `/programas` é só leitura; `/calendario` mostra concluídos reais + projeção. `Sidebar`/`HudHeader`/`AppShell` usam a mesma visão do dia.
 - **Testes**: `npm test` (`node --test`, sem dependência nova) cobre dia de Brasília e rotação. `src/lib/*.ts` puros usam imports relativos com `.ts` (`allowImportingTsExtensions`).
-- **Fases seguintes**: 3 = XP/bônus (100 XP a cada 5 treinos seguidos), atributos derivados de dados reais, recompensas reais, rank por tempo; 4 = limpeza dos "Missão Diária" vazios (mostrar antes de apagar) e auditoria das rotas de escrita.
+- **Fases seguintes**: 3 (resto) = atributos STR/AGI/VIT/END derivados de dados reais, recompensas com efeito real (títulos/conquistas), rank por tempo (a aba Rank ainda usa repetições antigas) e limpeza do dashboard; 4 = limpeza dos "Missão Diária" vazios (mostrar antes de apagar) e auditoria das rotas de escrita.
 
 ### Treinos A–D e alongamentos (Fase 2, 2026-10-13)
 Tudo por **tempo** (nunca repetições), baixo impacto (sem saltos, burpee, afundo ou corrida), no máximo 10 min. O Mestre é obeso e está retomando a rotina: qualquer treino novo deve manter isso (apoio em parede/cadeira, pouco trabalho no chão, ritmo em que dá para conversar).
@@ -98,7 +106,7 @@ npx prisma studio                      # browse the database
 vercel deploy --prod --scope <time>   # deploy to production (time/projeto em CLAUDE.local.md)
 ```
 
-There is no test suite.
+Tests: `npm test` (regras puras em `src/lib` e `src/config`; ver Fase 1/2/3 abaixo).
 
 ## Architecture
 

@@ -170,7 +170,8 @@ export default async function DashboardPage() {
                   {visao.sequenciaAtual} {visao.sequenciaAtual === 1 ? "treino" : "treinos"}
                 </div>
                 <span className="font-mono-label text-label-sm text-on-surface-variant">
-                  RECORDE: {visao.melhorSequencia}
+                  RECORDE: {visao.melhorSequencia} · BÔNUS EM {visao.treinosParaOBonus}{" "}
+                  {visao.treinosParaOBonus === 1 ? "TREINO" : "TREINOS"}
                 </span>
               </div>
               <div className={`${CARTAO} p-4`}>

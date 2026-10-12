@@ -34,6 +34,7 @@ type Action =
 
 type ResultadoDaConclusao = {
   xpGanho: number;
+  xpBonus: number;
   subiuDeNivel: boolean;
   nivel: number;
   sequenciaAtual: number;
@@ -245,6 +246,7 @@ export default function TimedProgram({ program, rotulo, detalhes, modo = "missao
               ) : resultado ? (
                 <span className="font-mono-label text-label-md text-on-surface">
                   MISSÃO CONCLUÍDA · +{resultado.xpGanho} XP
+                  {resultado.xpBonus > 0 ? ` (BÔNUS DE SEQUÊNCIA +${resultado.xpBonus})` : ""}
                   {resultado.subiuDeNivel ? ` · NÍVEL ${resultado.nivel}!` : ""} · SEQUÊNCIA{" "}
                   {resultado.sequenciaAtual}
                 </span>

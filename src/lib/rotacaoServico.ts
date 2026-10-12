@@ -20,7 +20,8 @@ import {
 } from "@/lib/rotacao";
 import { SEQUENCIA_DA_ROTACAO } from "@/config/rotacao";
 import { duracaoTotalEmSegundos } from "@/config/treinos";
-import { FRACAO_MINIMA_DA_DURACAO, XP_POR_TREINO_CONCLUIDO } from "@/config/xp";
+import { FRACAO_MINIMA_DA_DURACAO } from "@/config/xp";
+import { treinosParaOProximoBonus, xpDoTreino } from "@/lib/progressao";
 
 // ----------------------------------------------------------------------------
 // Erros de regra de negócio (a rota converte em resposta HTTP)
@@ -48,6 +49,8 @@ export type VisaoDoDia = {
   /** Treinos seguidos sem falha (0 se há treino atrasado). */
   sequenciaAtual: number;
   melhorSequencia: number;
+  /** Quantos treinos seguidos faltam para o próximo bônus de XP (1 a 5). */
+  treinosParaOBonus: number;
   nivel: number;
   xp: number;
   xpParaProximoNivel: number;
@@ -87,6 +90,7 @@ async function calcularVisaoDoDia(userId: string, agora: Date): Promise<VisaoDoD
     ponteiro,
     sequenciaAtual: sequenciaExibida(perfil.streakDays, diasEmAtraso),
     melhorSequencia: perfil.bestStreakDays,
+    treinosParaOBonus: treinosParaOProximoBonus(sequenciaExibida(perfil.streakDays, diasEmAtraso)),
     nivel: perfil.level,
     xp: perfil.xp,
     xpParaProximoNivel: xpForLevel(perfil.level),
@@ -125,7 +129,10 @@ export async function registrarInicioDoTreino(userId: string) {
 
 export type ResultadoDaConclusao = {
   treinoId: string;
+  /** XP total concedido (base + bônus de sequência). */
   xpGanho: number;
+  xpBase: number;
+  xpBonus: number;
   subiuDeNivel: boolean;
   niveisGanhos: number;
   nivel: number;
@@ -182,6 +189,10 @@ export async function concluirTreinoDoDia(userId: string): Promise<ResultadoDaCo
         );
       }
 
+      // XP do treino: base + bônus a cada 5 treinos seguidos (ex.: 5º treino seguido → 100 + 200).
+      const novaSequencia = sequenciaAposConcluir(perfil.streakDays, estado.diasEmAtraso);
+      const xpGanho = xpDoTreino(novaSequencia);
+
       // Registro do dia. Se já existir, o UNIQUE do banco lança P2002 (tratado abaixo).
       await tx.treinoConcluido.create({
         data: {
@@ -189,13 +200,12 @@ export async function concluirTreinoDoDia(userId: string): Promise<ResultadoDaCo
           dia: hoje,
           treinoId: estado.item,
           posicao: ponteiro.posicao,
-          xpConcedido: XP_POR_TREINO_CONCLUIDO,
+          xpConcedido: xpGanho.total,
           duracaoSegundos: decorrido,
         },
       });
 
-      const { level, xp, levelsGained } = applyXp(perfil.level, perfil.xp, XP_POR_TREINO_CONCLUIDO);
-      const novaSequencia = sequenciaAposConcluir(perfil.streakDays, estado.diasEmAtraso);
+      const { level, xp, levelsGained } = applyXp(perfil.level, perfil.xp, xpGanho.total);
       const proximo = ponteiroAposConcluir(SEQUENCIA_DA_ROTACAO, ponteiro, hoje);
 
       await tx.playerProfile.update({
@@ -217,13 +227,17 @@ export async function concluirTreinoDoDia(userId: string): Promise<ResultadoDaCo
         data: {
           profileId: perfil.id,
           tag: "SISTEMA: TREINO CONCLUÍDO",
-          message: `Treino ${estado.item} concluído. +${XP_POR_TREINO_CONCLUIDO} XP.`,
+          message:
+            `Treino ${estado.item} concluído. +${xpGanho.total} XP` +
+            (xpGanho.bonus > 0 ? ` (inclui +${xpGanho.bonus} de bônus por ${novaSequencia} treinos seguidos).` : "."),
         },
       });
 
       return {
         treinoId: estado.item,
-        xpGanho: XP_POR_TREINO_CONCLUIDO,
+        xpGanho: xpGanho.total,
+        xpBase: xpGanho.base,
+        xpBonus: xpGanho.bonus,
         subiuDeNivel: levelsGained > 0,
         niveisGanhos: levelsGained,
         nivel: level,
