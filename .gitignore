@@ -1,0 +1,71 @@
+# ---------------------------------------------------------------------------
+# SEGREDOS — nunca versionar. Valores reais ficam no .env.local e na Vercel.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
+
+# Backups do banco (contêm hashes de senha e dados de usuários)
+/backups/
+*.sql.gz
+*.dump
+
+# Contexto local do Claude (infra, emails, nomes de recursos)
+CLAUDE.local.md
+
+# Ferramentas/agentes locais
+/.claude/
+/.agents/
+/.windsurf/
+
+# Mídias com direitos de terceiros (© Gym visual) — baixar com
+# node scripts/fetch-exercise-media.cjs  (veja NOTICE.md)
+/public/exercises/
+
+# ---------------------------------------------------------------------------
+# Padrão do projeto
+# ---------------------------------------------------------------------------
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# prisma gerado
+/src/generated/prisma

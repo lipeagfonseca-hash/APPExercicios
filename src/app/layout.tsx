@@ -1,0 +1,64 @@
+import type { Metadata } from "next";
+import { Space_Grotesk, Inter, Space_Mono } from "next/font/google";
+import AppShell from "@/components/AppShell";
+import { getBrand } from "@/lib/brand";
+import "./globals.css";
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--display-font",
+  subsets: ["latin"],
+  weight: ["600", "700"],
+});
+
+const inter = Inter({
+  variable: "--body-font",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
+const spaceMono = Space_Mono({
+  variable: "--mono-font",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
+export async function generateMetadata(): Promise<Metadata> {
+  const brand = await getBrand();
+  return {
+    title: "SISTEMA",
+    description: "Registre treinos, suba de nível e vire o caçador mais forte.",
+    ...(brand.favicon ? { icons: { icon: brand.favicon } } : {}),
+  };
+}
+
+function cssUrl(url: string | null) {
+  return url ? `url("${url}")` : undefined;
+}
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const brand = await getBrand();
+  const brandVars = {
+    "--brand-logo": cssUrl(brand.logo),
+    "--brand-login-bg": cssUrl(brand.loginBackground),
+    "--brand-login-window": cssUrl(brand.loginWindow),
+  } as React.CSSProperties;
+
+  return (
+    <html
+      lang="pt-BR"
+      className={`${spaceGrotesk.variable} ${inter.variable} ${spaceMono.variable} h-full antialiased dark`}
+    >
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+          rel="stylesheet"
+        />
+      </head>
+      <body
+        style={brandVars}
+        className="min-h-full bg-surface font-body text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(93,37,199,0.18),rgba(15,19,29,0))]">
+        <AppShell>{children}</AppShell>
+      </body>
+    </html>
+  );
+}

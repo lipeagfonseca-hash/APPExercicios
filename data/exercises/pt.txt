@@ -1,0 +1,370 @@
+0001|Abdominal 3/4
+0002|Flexão lateral 45°
+0003|Abdominal bicicleta
+0006|Toque alternado nos calcanhares
+0017|Barra fixa assistida
+0020|Prancha de equilíbrio
+0025|Supino reto com barra
+0027|Remada curvada com barra
+0031|Rosca direta com barra
+0032|Levantamento terra com barra
+0033|Supino declinado com barra
+0042|Agachamento frontal com barra
+0043|Agachamento completo com barra
+0047|Supino inclinado com barra
+0054|Afundo com barra
+0085|Levantamento terra romeno com barra
+0095|Encolhimento com barra
+0120|Remada alta com barra
+0129|Mergulho no banco (joelhos flexionados)
+0130|Extensão de quadril no banco
+0137|Body-up
+0138|Bottoms-up
+0139|Barra fixa para bíceps (pegada fechada)
+0140|Barra fixa para bíceps
+0201|Extensão de tríceps na polia
+0227|Crucifixo em pé na polia
+0251|Mergulho no peito
+0253|Barra supinada (pegada paralela fechada)
+0257|Círculos de joelho (alongamento)
+0258|Flexão em relógio
+0259|Flexão de pegada fechada
+0260|Casulos
+0262|Abdominal cruzado
+0267|Abdominal com mãos acima da cabeça
+0274|Abdominal no chão
+0276|Dead bug
+0277|Abdominal declinado
+0279|Flexão declinada
+0282|Abdominal declinado completo
+0283|Flexão diamante
+0284|Panturrilha burro
+0289|Supino reto com halteres
+0293|Remada curvada com halteres
+0297|Rosca concentrada com halter
+0308|Crucifixo com halteres
+0310|Elevação frontal com halteres
+0313|Rosca martelo com halteres
+0314|Supino inclinado com halteres
+0333|Coice de tríceps com halter
+0334|Elevação lateral com halteres
+0336|Afundo com halteres
+0375|Pullover com halter
+0380|Elevação lateral inversa com halteres
+0406|Encolhimento com halteres
+0416|Rosca alternada em pé com halteres
+0431|Subida no banco com halteres
+0443|Cotovelo ao joelho
+0456|Abdominal com pernas flexionadas
+0457|Abdominal com braços estendidos
+0459|Chutes alternados (flutter kicks)
+0464|Prancha frontal com rotação
+0466|Barra fixa com esterno (Gironda)
+0467|Barra fixa gorila
+0469|Abdominal de virilha
+0471|Flexão em parada de mão
+0472|Elevação de pernas suspenso
+0473|Pike suspenso
+0474|Elevação de quadril suspenso com pernas estendidas
+0475|Elevação de pernas estendidas suspenso
+0476|Elevação de quadril suspenso com rotação
+0484|Elevação de quadril (joelhos flexionados)
+0488|Hiperextensão no banco
+0489|Hiperextensão
+0490|Flexão inclinada de pegada fechada
+0491|Elevação de quadril inclinada (pernas estendidas)
+0492|Flexão inclinada com salto
+0493|Flexão inclinada
+0494|Flexão inclinada com pegada invertida
+0495|Abdominal inclinado com rotação
+0496|Flexora invertida (apoio no banco)
+0497|Remada invertida (variação 2)
+0498|Remada invertida com fitas
+0499|Remada invertida
+0500|Limpadores isométricos
+0501|Burpee com polichinelo
+0507|Abdominal canivete
+0508|Abdominal Janda
+0513|Agachamento com salto (variação 2)
+0514|Agachamento com salto
+0534|Agachamento goblet com kettlebell
+0549|Swing com kettlebell
+0555|Abdominal com chute
+0558|Muscle-up com impulso
+0570|Puxada de pernas no banco
+0576|Supino na máquina
+0585|Cadeira extensora
+0594|Panturrilha sentado na máquina
+0599|Mesa flexora sentado
+0603|Desenvolvimento de ombros na máquina
+0613|Alongamento de quadríceps deitado de lado
+0620|Elevação de pernas deitado no banco
+0624|Abdominal em marcha na parede
+0627|Barra supinada com pegada mista
+0628|Caminhada monster
+0630|Mountain climber
+0631|Muscle-up
+0634|Abdominal negativo
+0635|Abdominal oblíquo no chão
+0638|Barra supinada com um braço
+0639|Mergulho com um braço
+0642|Flexão com chute lateral da perna
+0643|Alongamento de tríceps acima da cabeça
+0651|Barra fixa com pegada neutra
+0652|Barra fixa
+0658|Flexão na parede (variação 2)
+0659|Flexão na parede
+0661|Flexão com chute da perna por dentro
+0662|Flexão
+0664|Flexão para prancha lateral
+0666|Flexão com um braço elevado
+0668|Ponte traseira declinada
+0669|Alongamento de deltoide posterior
+0670|Barra fixa por trás
+0672|Mergulho reverso
+0674|Barra fixa com pegada supinada
+0677|Mergulho nas argolas
+0678|Puxada Rocky na barra fixa
+0684|Corrida (esteira)
+0685|Corrida
+0687|Giro russo
+0688|Barra fixa escapular
+0689|Elevação de pernas sentado
+0690|Alongamento lombar sentado
+0691|Abdominal lateral sentado na parede
+0696|Flexora invertida autoassistida (no chão)
+0697|Flexora invertida autoassistida
+0699|Flexão com toque no ombro
+0705|Ponte lateral (variação 2)
+0709|Elevação lateral de quadril nas paralelas
+0710|Abdução lateral de quadril
+0716|Alongamento lateral do pescoço com empurrão
+0717|Flexão lateral
+0720|Barra fixa lado a lado
+0721|Alongamento de punho lateral
+0725|Flexão com um braço
+0730|Deslize com uma perna na plataforma
+0735|Abdominal (variação 2)
+0748|Supino reto no Smith
+0770|Agachamento no Smith
+0778|Flexão aranha
+0794|Alongamento lateral em pé
+0795|Flexão de perna em pé
+0803|Flexão superman
+0805|Rollout abdominal suspenso
+0806|Flexão suspensa
+0807|Abdominal reverso suspenso
+0808|Remada suspensa
+0809|Afundo búlgaro suspenso
+0812|Mergulho de tríceps (pernas no banco)
+0813|Mergulho de tríceps (entre bancos)
+0814|Mergulho de tríceps
+0815|Mergulho de tríceps no chão
+0816|Tríceps press
+0817|Alongamento de tríceps
+0826|Elevação vertical de pernas nas paralelas
+0858|Tiros de corrida
+0860|Coice de glúteo na polia
+0861|Remada sentada na polia
+0865|Elevação de pernas e quadril deitado
+0870|Butt-ups
+0871|Abdominal grupado
+0872|Abdominal reverso
+1004|Agachamento com elástico
+1160|Burpee
+1167|Alongamento dinâmico de peito
+1271|Alongamento de peito e ombro frontal
+1273|Flexão com palma
+1275|Flexão com queda
+1297|Contração isométrica de peito
+1306|Flexão pliométrica
+1311|Flexão com mãos afastadas
+1326|Barra supinada
+1327|Barra supinada com pegada fechada
+1346|Alongamento de dorsal ajoelhado
+1350|Remada sentada na máquina
+1352|Rosca lombar
+1355|Um braço contra a parede
+1358|Alongamento deitado de lado no chão
+1362|Esfinge
+1363|Alongamento da coluna
+1364|Inclinação pélvica em pé
+1365|Alongamento da parte superior das costas
+1366|Cachorro olhando para cima
+1367|Barra fixa por trás com pegada aberta
+1368|Círculos de tornozelo
+1373|Panturrilha em pé com peso do corpo
+1374|Salto da caixa com estabilização em uma perna
+1377|Alongamento de panturrilha com as mãos na parede
+1386|Panturrilha burro com uma perna
+1387|Panturrilha no chão com uma perna
+1390|Alongamento de panturrilha sentado
+1397|Panturrilhas em pé
+1398|Alongamento de panturrilha em pé
+1399|Mergulho no banco com pés no chão
+1401|Muscle-up na barra vertical
+1403|Alongamento lateral do pescoço
+1405|Alongamento de peitoral por trás
+1407|Alongamento de panturrilha empurrando a parede
+1418|Abraço nos joelhos junto ao peito
+1419|Alongamento cruz de ferro
+1421|Flexão modificada para antebraços
+1422|Inclinação pélvica para ponte
+1423|Hiperextensão reversa no banco
+1424|Alongamento de glúteo sentado
+1427|Abdução externa de quadril com perna estendida
+1428|Círculos de punho
+1429|Barra fixa com pegada aberta
+1430|Mergulho no peito (na gaiola de barras)
+1459|Levantamento terra romeno com halteres
+1460|Passada (afundo caminhando)
+1466|Elevação de quadril com rotação
+1467|Flexão sobre os antebraços
+1468|Toque nos pés com giro de caranguejo
+1471|Inchworm
+1472|Salto para a frente
+1473|Salto para trás
+1476|Agachamento com uma perna
+1489|Agachamento sissy
+1490|Panturrilha em pé (na escada)
+1494|Postura da borboleta (yoga)
+1495|Abdominal oblíquo (variação 2)
+1511|Alongamento de posterior de coxa
+1512|Alongamento de quadríceps de quatro apoios
+1548|Alongamento de perna estendida na cadeira
+1576|Alongamento de posterior com perna elevada
+1585|Alongamento de corredor
+1587|Sequência de postura sentada de ângulo aberto
+1604|O maior alongamento do mundo
+1685|Agachamento com alcance acima da cabeça
+1686|Agachamento com alcance acima da cabeça e rotação
+1687|Passo para trás com alcance acima da cabeça
+1688|Afundo com rotação
+1689|Empurrar e puxar com peso do corpo
+1753|Mergulho em três bancos
+1759|Agachamento pistol
+1760|Agachamento goblet com halter
+1761|Elevação de joelhos oblíqua suspenso
+1763|Barra fixa com pegada na largura dos ombros
+1764|Elevação de pernas e quadril suspenso
+1766|Flexora invertida autoassistida
+1769|Rosca de bíceps deitado de lado
+1770|Rosca concentrada com a perna
+1771|Extensão de tríceps ajoelhado
+1772|Elevação de cotovelo (flexão reversa)
+1773|Remada com toalha e um braço
+1774|Abdução de quadril na ponte lateral
+1775|Adução de quadril na prancha lateral
+2271|Soco de esquerda (boxe)
+2298|Remada invertida no banco
+2300|Remada invertida com joelhos flexionados
+2312|Cotovelo ao joelho deitado
+2329|Rotação da coluna
+2333|Slingers de braço suspenso com pernas estendidas
+2355|Slingers de braço suspenso com joelhos flexionados
+2363|Mergulho no peito com pegada aberta nas paralelas altas
+2368|Agachamento dividido
+2398|Flexão de pegada fechada (sobre os joelhos)
+2400|Flexora invertida (na máquina de barra fixa)
+2429|Abdominal sapo
+2462|Mergulho no peito na barra reta
+2466|Mountain climber cruzado
+2567|Alongamento de piriforme sentado
+2571|Alongamento sapo balançando
+2801|Elevação de pernas com rotação
+2802|Elevação de pernas com rotação (variação 2)
+2963|Elevação de pernas estendidas na cadeira romana
+3011|Flexão escapular inclinada
+3012|Mergulho escapular
+3013|Ponte de glúteo baixa no chão
+3016|Curl-up
+3019|Barra fixa no banco
+3021|Flexão escapular
+3119|Agachamento potty
+3132|Agachamento potty com apoio
+3145|Flexão plus
+3147|Inclinação pélvica
+3156|Remada em pé com um braço e pegada fechada
+3158|Remada em pé com pegada fechada
+3161|Remada em pé com um braço (com toalha)
+3162|Remada em pé com um braço
+3165|Remada em pé (com toalha)
+3166|Remada em pé
+3167|Remada agachado (com toalha)
+3168|Remada agachado
+3193|Elevação glúteo-posterior
+3201|Abdominal 1/4
+3202|Meio abdominal
+3203|Meio abdominal prisioneiro
+3204|Abdominal completo com braços acima da cabeça
+3211|Flexão de joelhos
+3212|Toque básico nos pés
+3213|Toque nos pés lado a lado
+3214|Toque circular nos pés com braços afastados
+3215|Toque circular nos pés com mãos entrelaçadas invertidas
+3216|Flexão com toque no peito
+3217|Flexão hindu modificada
+3218|Toque circular nos pés com mãos entrelaçadas
+3219|Saltos em tesoura
+3220|Saltos com pernas abertas
+3221|Meio agachamento com flexão de joelhos
+3222|Salto de semiagachamento
+3223|Salto estrela
+3224|Polichinelo
+3231|Toque nos dois pés
+3239|Prancha ajoelhada com toque no ombro
+3287|Mergulho de cotovelos
+3288|Mergulho coreano
+3289|Mergulho impossível
+3291|Stalder press
+3292|Elevator
+3293|Barra fixa arqueiro
+3294|Flexão arqueiro
+3295|Front lever (repetições)
+3296|Front lever
+3297|Back lever
+3298|Planche afastado
+3299|Planche completo
+3300|Planche inclinado
+3301|Planche sapo
+3302|Parada de mão
+3303|Bandeira humana
+3304|Skin the cat
+3314|Maltese afastado
+3315|Maltese completo
+3318|Giro 360 nas argolas
+3327|Flexão de planche completo
+3360|Caminhada de urso
+3361|Skater jump
+3418|Barra fixa em L
+3419|L-sit no chão
+3420|V-sit no chão
+3433|Chutes de nadador (variação 2)
+3470|Afundo frontal
+3523|Ponte de glúteo com as duas pernas no banco
+3533|Quadríceps
+3543|Agachamento com salto de queda
+3544|Prancha lateral inclinada
+3552|Passos rápidos (variação 2)
+3561|Marcha na ponte de glúteo
+3582|Afundo com salto
+3636|Joelho alto contra a parede
+3637|Corrida na roda
+3638|Empurrar para corrida
+3639|Rotação deitado com joelhos flexionados
+3640|Abdominal com toque no joelho
+3645|Ponte com uma perna estendida
+3655|Joelhos altos com afundo caminhando
+3656|Corrida de passos curtos
+3662|Flexão pike para cobra
+3663|Prancha reversa com elevação de perna
+3665|Prancha power point
+3667|Adução de quadril deitado de lado
+3669|Arqueiro em pé
+3671|Passo de esqui
+3672|Passo para frente e para trás
+3679|Abdominal com braços no peito
+3698|Inchworm (variação 2)
+3699|Toque no ombro
+3769|Agachamento reverência
+3785|Flexão inclinada (na caixa)

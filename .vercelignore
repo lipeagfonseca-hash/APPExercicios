@@ -1,0 +1,14 @@
+# Quando existe .vercelignore, o CLI o usa no lugar do .gitignore.
+# Mantemos public/exercises/ (fora do git) no deploy; o resto segue igual.
+.git
+node_modules
+.next
+.env
+.env.*
+.vercel
+backups
+CLAUDE.local.md
+.claude
+.agents
+.windsurf
+src/generated/prisma

@@ -1,0 +1,11 @@
+Imagens de identidade visual do sistema.
+
+1. Coloque o arquivo nesta pasta (jpg, png, webp ou svg).
+2. Aponte o caminho em src/lib/brand.ts (ex.: "/brand/fundo.webp").
+3. Faça o deploy.
+
+Favicon: substitua src/app/favicon.ico, ou adicione src/app/icon.png
+(e src/app/apple-icon.png para iOS). O Next detecta sozinho.
+
+Tamanhos sugeridos: fundos 1920x1080 em webp (< 300 KB);
+logo 512x512 png/svg com fundo transparente; favicon 512x512 png.

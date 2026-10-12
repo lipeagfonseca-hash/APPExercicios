@@ -1,0 +1,46 @@
+// Maps each program exercise (programs.ts) to its catalog entry (Exercise.id)
+// so the "Programa do dia" can show the demo GIF. Closest available movement
+// is used when the catalog has no exact match.
+export const PROGRAM_EXERCISE_MEDIA: Record<string, string> = {
+  Polichinelo: "3224",
+  Burpee: "1160",
+  "Agachamento com salto": "0514",
+  "Prancha com toque de ombro": "3699",
+  "Mountain climber": "0630",
+  "Corrida parada (joelho alto)": "3636",
+  "Afundo alternado com salto": "3582",
+  Flexão: "0662",
+  "Abdominal bicicleta": "0003",
+  "Prancha lateral": "3544",
+  "Skater jump": "3361",
+  "Agachamento sumô com salto": "0513",
+  "Burpee com flexão": "1160",
+  "Mountain climber cruzado": "2466",
+  "Agachamento com chute frontal": "0514",
+  "Prancha com elevação de perna": "3663",
+  "Polichinelo com agachamento": "3224",
+  "Corrida parada rápida": "3656",
+  "Flexão com rotação": "0664",
+  "Afundo reverso com salto": "3582",
+  "Abdominal canivete": "0507",
+  "Prancha dinâmica": "3665",
+  "Burpee sem flexão": "1160",
+  "Corrida parada com joelho alto": "3636",
+  // Low-impact track
+  "Agachamento com apoio": "3132",
+  "Agachamento com alcance": "1685",
+  "Flexão na parede": "0659",
+  "Flexão inclinada": "3785",
+  "Rosca de perna em pé": "0795",
+  "Abdução lateral de quadril": "0710",
+  "Panturrilha em pé": "1373",
+  "Ponte de glúteo": "3013",
+  "Elevação de pernas sentado": "0689",
+  "Inclinação pélvica em pé": "1364",
+  "Arqueiro em pé": "3669",
+  "Marcha acelerada": "3636",
+  "Marcha estática": "3636",
+};
+
+// Rest rules from the program descriptions (HIIT Q48): 20s between exercises, 1min between rounds.
+export const CIRCUIT_REST = { exerciseSeconds: 20, roundSeconds: 60 };

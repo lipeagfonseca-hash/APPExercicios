@@ -1,0 +1,145 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  password      String
+  createdAt     DateTime       @default(now())
+  workouts        Workout[]
+  playerProfile   PlayerProfile?
+  nutritionProfile NutritionProfile?
+}
+
+model PlayerProfile {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level            Int       @default(1)
+  xp               Int       @default(0)
+  str              Int       @default(10)
+  vit              Int       @default(10)
+  agi              Int       @default(10)
+  end              Int       @default(10)
+  streakDays       Int       @default(0)
+  bestStreakDays   Int       @default(0)
+  lastActivityDate DateTime?
+  lastRewardClaimDate DateTime?
+  updatedAt        DateTime  @updatedAt
+  logs             SystemLog[]
+}
+
+model SystemLog {
+  id        String        @id @default(cuid())
+  profileId String
+  profile   PlayerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  tag       String
+  message   String
+  createdAt DateTime      @default(now())
+
+  @@index([profileId, createdAt])
+}
+
+enum ExerciseType {
+  STRENGTH
+  CARDIO
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHT
+  MODERATE
+  ACTIVE
+  VERY_ACTIVE
+}
+
+enum Goal {
+  LOSE
+  MAINTAIN
+  GAIN
+}
+
+model NutritionProfile {
+  id             String        @id @default(cuid())
+  userId         String        @unique
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weightKg       Float
+  targetWeightKg Float
+  heightCm       Float
+  age            Int
+  gender         Gender
+  activityLevel  ActivityLevel
+  goal           Goal
+  updatedAt      DateTime      @updatedAt
+}
+
+model Workout {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  date      DateTime          @default(now())
+  createdAt DateTime          @default(now())
+  exercises WorkoutExercise[]
+
+  @@index([userId, date])
+}
+
+model WorkoutExercise {
+  id        String       @id @default(cuid())
+  workoutId String
+  workout   Workout      @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  name      String
+  type      ExerciseType @default(STRENGTH)
+  order     Int          @default(0)
+  sets      SetEntry[]
+}
+
+model SetEntry {
+  id                String          @id @default(cuid())
+  workoutExerciseId String
+  workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+  reps              Int
+  weightKg          Float?
+  order             Int             @default(0)
+}
+
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Exercise {
+  id             String   @id
+  namePt         String
+  nameEn         String
+  bodyPart       String
+  equipment      String
+  target         String
+  secondary      String[]
+  instructionsEn String?  @db.Text
+  instructionsEs String?  @db.Text
+  mediaId        String
+  search         String
+
+  @@index([bodyPart])
+  @@index([equipment])
+}
