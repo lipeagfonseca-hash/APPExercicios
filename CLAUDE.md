@@ -51,15 +51,19 @@ O treino do dia **é** a missão. Não existe mais missão por repetições/km, 
 - **Banco**: `PlayerProfile.posicaoRotacao/itemDesde/sessaoIniciadaEm/sessaoTreinoId` e tabela `TreinoConcluido`. Migration `rotacao_treino_do_dia` tem `down.sql` ao lado.
 - **UI**: dashboard mostra treino pendente (`TimedProgram`, modo missão), "concluído hoje" ou descanso; `/programas` é só leitura; `/calendario` mostra concluídos reais + projeção. `Sidebar`/`HudHeader`/`AppShell` usam a mesma visão do dia.
 - **Testes**: `npm test` (`node --test`, sem dependência nova) cobre dia de Brasília e rotação. `src/lib/*.ts` puros usam imports relativos com `.ts` (`allowImportingTsExtensions`).
-- **Provisório (Fase 2)**: A–D apontam para os programas `low-*` antigos; D ainda é o "Despertar". Dia de descanso mostra só texto (rotina de alongamentos sem XP fácil virá depois).
-- **Fases seguintes**: 2 = treinos A–D por tempo (A inferiores, B superiores+core, C cardio, D core+mobilidade) e alongamentos do descanso; 3 = XP/bônus (100 XP a cada 5 treinos seguidos), atributos derivados de dados reais, recompensas reais, rank por tempo; 4 = limpeza dos "Missão Diária" vazios (mostrar antes de apagar) e auditoria das rotas de escrita.
+- **Fases seguintes**: 3 = XP/bônus (100 XP a cada 5 treinos seguidos), atributos derivados de dados reais, recompensas reais, rank por tempo; 4 = limpeza dos "Missão Diária" vazios (mostrar antes de apagar) e auditoria das rotas de escrita.
 
-### Programas de treino (2026-10-13)
-- `src/lib/programs.ts`: `Program` ganhou `track` (`"low-impact" | "classic"`) e `timed?: TimedPlan`. Trilha **baixo impacto** (`low-a` Despertar, `low-b` Pernas Seguras, `low-c` Tronco e Postura, `low-d` Cardio Suave): 3 blocos de 4 exercícios, 30 s de esforço + 10 s de troca, 2 pausas ativas de 60 s com "Marcha estática" entre os blocos, mais 5 s de preparo = **09:35**. Sem saltos; em pé, apoiado na parede/cadeira ou sentado. O Mestre (obeso, retomando a rotina) pediu essa trilha: manter qualquer novo programa baixo-impacto compatível (sem salto, sem afundo/joelho em carga, pouco trabalho no chão). Trilha **classic** = os 4 HIIT Q48 originais (com salto).
-- (`trainingCycle.ts`/`ACTIVE_TRACK` foram removidos na Fase 1: a ordem agora vem de `src/config/rotacao.ts`.)
-- `src/lib/timedProgram.ts` (`buildSegments`) achata o plano em segmentos (ready/work/transition/pause); `TimedProgram.tsx` percorre com cronômetro automático, beep a cada troca e a cada um dos últimos 3 s, Pausar/Pular/Parar. `exercises` do programa timed é derivado (nome único, sets = vezes que aparece, reps = estimativa para 30 s) só para o botão "Usar este treino"/XP.
-- Mídia: `PROGRAM_EXERCISE_MEDIA` (nome -> id do catálogo). O catálogo não tem "marcha estática"; tanto "Marcha estática" (pausa) quanto "Marcha acelerada" usam o GIF `3636` (joelho alto contra a parede), que é o mais próximo. "Rosca de perna em pé" = `0795`.
-- `/programas` agora agrupa por trilha e mostra a duração dos programas timed.
+### Treinos A–D e alongamentos (Fase 2, 2026-10-13)
+Tudo por **tempo** (nunca repetições), baixo impacto (sem saltos, burpee, afundo ou corrida), no máximo 10 min. O Mestre é obeso e está retomando a rotina: qualquer treino novo deve manter isso (apoio em parede/cadeira, pouco trabalho no chão, ritmo em que dá para conversar).
+- **Onde editar** (nenhuma lógica muda):
+  - `src/config/parametrosDeTempo.ts`: esforço (30 s), troca (10 s), pausa ativa (60 s), preparo (5 s), exercício da pausa e o limite de 600 s. **Progressão = mexer só aqui.** Subir o esforço estoura o limite com a estrutura atual; o build falha com mensagem explicando (reduza a pausa ou os blocos; ex.: esforço 35 s + pausa 40 s = 595 s).
+  - `src/config/exercicios.ts`: biblioteca (nome único, `gifId` do catálogo, instrução curta, tipo, repetições estimadas).
+  - `src/config/treinos.ts`: A–D como listas de ids em 3 blocos de 4, mais a rotina de alongamento. Conta atual: 5 + 3×(4×30 + 3×10) + 2×60 = **575 s (09:35)**.
+- **Divisão**: A = Pernas Seguras (inferiores), B = Tronco e Postura (superiores + core), C = Cardio Suave (corpo todo), D = Core e Mobilidade. O antigo "Despertar" e os HIIT Q48 (com salto) foram removidos; estão no histórico do git.
+- **Montagem pura e testada**: `src/lib/montarTreino.ts` (ids → `Program`, detalhes por nome, `validarTreinos`) e `src/lib/timedProgram.ts` (`buildSegments`: preparo → esforço/troca por bloco → pausa ativa entre blocos). `src/lib/programs.ts` só tem tipos. Os testes (`src/config/treinos.test.ts`) conferem duração, estrutura, baixo impacto e que todo `gifId` existe em `data/exercises/rows.json`.
+- **Cronômetro** (`TimedProgram.tsx`): `modo="missao"` registra início/conclusão no servidor (XP); `modo="livre"` só cronometra. Mostra GIF, instrução curta e duração de cada exercício; clicar abre o detalhe com a instrução do catálogo (en/es).
+- **Dia de descanso**: card "DESCANSO / RECUPERAÇÃO" + rotina de 8 alongamentos de 30 s (`PROGRAMA_DE_ALONGAMENTO`, modo livre): **sem XP, sem missão, sem efeito na sequência**.
+- O catálogo não tem "marcha no lugar": "Marcha acelerada" e "Marcha estática" usam o GIF `3636` (joelho alto contra a parede), o mais próximo.
 
 ### Últimas alterações (2026-10-12)
 1. Auditoria completa (build, lint, migrations, rotas protegidas, `npm audit`) e correção dos 2 erros de lint (`conquistas` com `Date.now()` virou `accountAgeInDays()`; `WorkoutForm` com `eslint-disable` justificado).

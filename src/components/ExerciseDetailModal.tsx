@@ -17,9 +17,12 @@ type Detail = {
 
 export default function ExerciseDetailModal({
   id,
+  instrucaoCurta,
   onClose,
 }: {
   id: string;
+  /** Instrução curta em português (da configuração do treino), mostrada primeiro. */
+  instrucaoCurta?: string;
   onClose: () => void;
 }) {
   const [detail, setDetail] = useState<Detail | null>(null);
@@ -94,6 +97,12 @@ export default function ExerciseDetailModal({
         <p className="mb-3 text-center font-mono-label text-label-sm text-on-surface-variant">
           © Gym visual — gymvisual.com
         </p>
+
+        {instrucaoCurta && (
+          <p className="mb-3 rounded-lg bg-primary-container/10 px-3 py-2 font-body text-body-sm text-on-surface">
+            {instrucaoCurta}
+          </p>
+        )}
 
         {failed && (
           <p className="font-mono-label text-label-sm text-error">

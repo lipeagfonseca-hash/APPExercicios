@@ -1,22 +1,22 @@
-import type { Program } from "@/lib/programs";
+import type { Program } from "./programs.ts";
 
 export type Segment = {
   kind: "ready" | "work" | "transition" | "pause";
   seconds: number;
-  /** Exercise shown during this segment. */
+  /** Exercício mostrado durante este segmento. */
   name: string;
-  /** What comes next (shown during transitions and pauses). */
+  /** O que vem a seguir (mostrado nas trocas e pausas). */
   nextName: string | null;
   block: number | null;
 };
 
-export const READY_SECONDS = 5;
-
 /**
- * Flattens a timed program into the sequence the timer walks through:
- * ready -> (work, transition)* per block, with an active pause between blocks.
- * No transition after the last exercise of a block (the pause is the rest) or
- * of the whole workout.
+ * Achata um treino por tempo na sequência que o cronômetro percorre:
+ * preparo → (esforço, troca)* por bloco, com uma pausa ativa entre blocos.
+ * Não há troca depois do último exercício de um bloco (a pausa já é o descanso)
+ * nem depois do último exercício do treino.
+ *
+ * Ex.: blocos [[a,b],[c]] → ready, work a, transition, work b, pause, work c.
  */
 export function buildSegments(program: Program): Segment[] {
   const plan = program.timed;
@@ -24,11 +24,17 @@ export function buildSegments(program: Program): Segment[] {
 
   const segments: Segment[] = [];
   const firstName = plan.blocks[0]?.[0] ?? null;
-  segments.push({ kind: "ready", seconds: READY_SECONDS, name: "Prepare-se", nextName: firstName, block: null });
+  segments.push({ kind: "ready", seconds: plan.prepareSeconds, name: "Prepare-se", nextName: firstName, block: null });
 
   plan.blocks.forEach((block, blockIndex) => {
     block.forEach((exercise, exerciseIndex) => {
-      segments.push({ kind: "work", seconds: plan.workSeconds, name: exercise, nextName: null, block: blockIndex });
+      segments.push({
+        kind: "work",
+        seconds: plan.secondsByExercise?.[exercise] ?? plan.workSeconds,
+        name: exercise,
+        nextName: null,
+        block: blockIndex,
+      });
       const isLastInBlock = exerciseIndex === block.length - 1;
       if (!isLastInBlock) {
         segments.push({

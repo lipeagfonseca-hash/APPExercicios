@@ -10,7 +10,14 @@ import { prisma } from "@/lib/prisma";
 import { carregarVisaoDoDia } from "@/lib/rotacaoServico";
 import { formatClock } from "@/lib/timedProgram";
 import { ID_DO_DESCANSO, SEQUENCIA_DA_ROTACAO } from "@/config/rotacao";
-import { duracaoTotalEmSegundos, TREINOS, treinoPorId } from "@/config/treinos";
+import {
+  DETALHES_DO_ALONGAMENTO,
+  DETALHES_DOS_TREINOS,
+  PROGRAMA_DE_ALONGAMENTO,
+  duracaoTotalEmSegundos,
+  TREINOS,
+  treinoPorId,
+} from "@/config/treinos";
 import SystemLogPanel from "@/components/SystemLogPanel";
 import TimedProgram from "@/components/TimedProgram";
 
@@ -97,6 +104,7 @@ export default async function DashboardPage() {
                   key={estado.item}
                   program={treinoPorId(estado.item)}
                   rotulo={`Treino ${estado.item}`}
+                  detalhes={DETALHES_DOS_TREINOS}
                 />
               </>
             )}
@@ -118,19 +126,27 @@ export default async function DashboardPage() {
             )}
 
             {estado.tipo === "DESCANSO" && (
-              <section className={`${CARTAO} p-5`}>
-                <span className="font-mono-label text-label-md uppercase tracking-wider text-primary">
-                  [DESCANSO / RECUPERAÇÃO]
-                </span>
-                <h2 className="font-display text-headline-md text-on-surface">Hoje é dia de descanso</h2>
-                <p className="mt-1 font-body text-body-sm text-on-surface-variant">
-                  Sem cronômetro obrigatório. Uma caminhada leve de 15 a 20 minutos ou alguns minutos de
-                  mobilidade ajudam a recuperar. Sua sequência não é afetada pelo descanso.
-                </p>
-                <p className="mt-2 font-mono-label text-label-sm text-on-surface-variant">
-                  PRÓXIMO: {rotuloDoItem(itemSeguinte(ponteiro.posicao))}
-                </p>
-              </section>
+              <>
+                <section className={`${CARTAO} p-5`}>
+                  <span className="font-mono-label text-label-md uppercase tracking-wider text-primary">
+                    [DESCANSO / RECUPERAÇÃO]
+                  </span>
+                  <h2 className="font-display text-headline-md text-on-surface">Hoje é dia de descanso</h2>
+                  <p className="mt-1 font-body text-body-sm text-on-surface-variant">
+                    Sem treino hoje e sem cronômetro obrigatório. Se quiser, faça os alongamentos abaixo ou uma
+                    caminhada leve de 15 a 20 minutos. Eles não dão XP, e o descanso não afeta a sua sequência.
+                  </p>
+                  <p className="mt-2 font-mono-label text-label-sm text-on-surface-variant">
+                    PRÓXIMO: {rotuloDoItem(itemSeguinte(ponteiro.posicao))}
+                  </p>
+                </section>
+                <TimedProgram
+                  program={PROGRAMA_DE_ALONGAMENTO}
+                  rotulo="Alongamentos"
+                  detalhes={DETALHES_DO_ALONGAMENTO}
+                  modo="livre"
+                />
+              </>
             )}
 
             {/* ---------------- Resumo: XP, sequência, próximo treino ---------------- */}
