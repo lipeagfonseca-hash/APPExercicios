@@ -35,7 +35,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4 py-16">
+    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4 py-16">
       <AuthBackdrop />
       <div
         className="rounded-xl border border-primary-container/20 p-6"
@@ -93,6 +93,6 @@ export default function LoginPage() {
         Não tem conta? Peça ao administrador.
       </p>
       </div>
-    </div>
+    </main>
   );
 }

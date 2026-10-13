@@ -3,7 +3,7 @@ import Link from "next/link";
 // Página estática (vem do CDN). Quem já está logado é redirecionado para /dashboard pelo proxy.ts.
 export default function Home() {
   return (
-    <div className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-6 px-4 py-24 text-center">
+    <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-6 px-4 py-24 text-center">
       <span className="font-mono-label text-label-sm uppercase tracking-[0.3em] text-primary">
         [OVERLAY DIRECTIVE // ACESSO AO SISTEMA]
       </span>
@@ -22,6 +22,6 @@ export default function Home() {
           Entrar
         </Link>
       </div>
-    </div>
+    </main>
   );
 }
