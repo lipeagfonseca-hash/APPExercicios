@@ -6,7 +6,13 @@ const fs = require("fs");
 const path = require("path");
 
 const BASE = "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/";
-const rows = JSON.parse(fs.readFileSync(path.join(__dirname, "../data/exercises/rows.json"), "utf8"));
+const excluidos = new Set(
+  fs.readFileSync(path.join(__dirname, "../data/exercises/excluidos.txt"), "utf8")
+    .split(/\r?\n/).filter(Boolean).map((l) => l.slice(0, l.indexOf("|"))),
+);
+// só o que está no catálogo do app (o resto fica de fora do deploy)
+const rows = JSON.parse(fs.readFileSync(path.join(__dirname, "../data/exercises/rows.json"), "utf8"))
+  .filter((r) => !excluidos.has(r.id));
 const root = path.join(__dirname, "../public/exercises");
 
 async function baixar(relativo, destino) {

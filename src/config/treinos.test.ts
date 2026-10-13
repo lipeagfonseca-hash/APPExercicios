@@ -77,7 +77,7 @@ test("baixo impacto: nenhum exercício é de salto, burpee ou afundo", () => {
 
 test("todo exercício tem nome, instrução curta e um GIF que existe no catálogo", () => {
   const catalogo = JSON.parse(
-    readFileSync(new URL("../../data/exercises/rows.json", import.meta.url), "utf8"),
+    readFileSync(new URL("../data/catalogo-exercicios.json", import.meta.url), "utf8"),
   ) as { id: string }[];
   const ids = new Set(catalogo.map((c) => c.id));
 

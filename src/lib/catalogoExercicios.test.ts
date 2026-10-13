@@ -11,8 +11,8 @@ const catalogo = JSON.parse(
   readFileSync(new URL("../data/catalogo-exercicios.json", import.meta.url), "utf8"),
 ) as Item[];
 
-test("o catálogo estático tem os 370 exercícios, com ids únicos e nomes em português", () => {
-  assert.equal(catalogo.length, 370);
+test("o catálogo estático tem os 162 exercícios (sem barras/academia nem impacto), com ids únicos e nomes em português", () => {
+  assert.equal(catalogo.length, 162);
   assert.equal(new Set(catalogo.map((e) => e.id)).size, catalogo.length);
   for (const e of catalogo) {
     assert.match(e.id, /^\d{4}$/);

@@ -14,10 +14,18 @@ const nomesPt = new Map(
     .map((l) => [l.slice(0, l.indexOf("|")), l.slice(l.indexOf("|") + 1).trim()]),
 );
 
+// Exercícios fora do app (barras/academia e impacto nas articulações): ver
+// data/exercises/excluidos.txt, gerado por scripts/selecionar-exercicios.cjs.
+const excluidos = new Set(
+  fs.readFileSync(path.join(__dirname, "../data/exercises/excluidos.txt"), "utf8")
+    .split(/\r?\n/).filter(Boolean).map((l) => l.slice(0, l.indexOf("|"))),
+);
+
 const normalizar = (s) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 
 const catalogo = linhas
+  .filter((r) => !excluidos.has(r.id))
   .map((r) => {
     const nome = nomesPt.get(r.id);
     if (!nome) throw new Error(`Sem tradução para ${r.id} (${r.nameEn})`);

@@ -6,7 +6,7 @@
 //
 // - O NOME precisa ser único (o cronômetro identifica o exercício por ele).
 // - `gifId` é o id do catálogo (4 dígitos) e precisa existir em
-//   data/exercises/rows.json (um teste confere isso).
+//   src/data/catalogo-exercicios.json (um teste confere isso).
 // - Todos são de BAIXO IMPACTO: sem saltos; em pé, apoiados ou sentados.
 // ============================================================================
 

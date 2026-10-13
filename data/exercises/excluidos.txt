@@ -1,0 +1,208 @@
+2363|exige barra/aparelho
+1418|impacto: salto
+3314|carga alta nas articulações
+3298|carga alta nas articulações
+0054|equipamento: Barra
+0336|equipamento: Halter
+1688|carga alta nas articulações
+3582|impacto
+3168|exige barra/aparelho
+1004|equipamento: Elástico
+0514|impacto
+0770|equipamento: Smith
+3293|exige barra/aparelho
+3294|carga alta nas articulações
+3220|impacto
+0697|carga alta nas articulações
+1766|carga alta nas articulações
+3318|exige barra/aparelho
+0549|equipamento: Kettlebell
+3019|exige barra/aparelho
+0129|exige barra/aparelho
+1399|exige barra/aparelho
+0130|exige barra/aparelho
+0652|exige barra/aparelho
+0017|equipamento: Máquina
+0651|exige barra/aparelho
+1326|exige barra/aparelho
+0253|exige barra/aparelho
+2333|exige barra/aparelho
+2355|exige barra/aparelho
+1160|impacto
+0140|exige barra/aparelho
+0139|exige barra/aparelho
+1770|equipamento: halter (descrição)
+1374|exige barra/aparelho
+1460|carga alta nas articulações
+3655|impacto
+2963|exige barra/aparelho
+0333|equipamento: Halter
+0860|equipamento: Polia
+0043|equipamento: Barra
+3315|carga alta nas articulações
+3299|carga alta nas articulações
+3327|carga alta nas articulações
+0297|equipamento: Halter
+0137|exige barra/aparelho
+0685|impacto
+0684|impacto
+3672|afundo
+3297|exige barra/aparelho
+3287|carga alta nas articulações
+0308|equipamento: Halter
+3769|afundo
+0257|carga alta nas articulações
+0282|exige barra/aparelho
+0277|exige barra/aparelho
+0279|exige barra/aparelho
+0033|equipamento: Barra
+0620|exige barra/aparelho
+0603|equipamento: Máquina
+2368|afundo
+3292|exige barra/aparelho
+0310|equipamento: Halter
+0334|equipamento: Halter
+0666|carga alta nas articulações
+0416|equipamento: Halter
+0227|equipamento: Polia
+3158|exige barra/aparelho
+3156|exige barra/aparelho
+3166|exige barra/aparelho
+3162|exige barra/aparelho
+3638|impacto
+0095|equipamento: Barra
+0406|equipamento: Halter
+0020|equipamento: prancha de equilíbrio
+3012|carga alta nas articulações
+0585|equipamento: Máquina
+0201|equipamento: Polia
+3303|exige barra/aparelho
+0042|equipamento: Barra
+3296|exige barra/aparelho
+3295|exige barra/aparelho
+0466|exige barra/aparelho
+3523|exige barra/aparelho
+3193|equipamento: máquina (descrição)
+1760|equipamento: Halter
+0534|equipamento: Kettlebell
+0467|exige barra/aparelho
+0489|exige barra/aparelho
+0488|exige barra/aparelho
+3289|carga alta nas articulações
+0495|exige banco inclinado
+0492|impacto
+0491|exige banco inclinado
+3300|carga alta nas articulações
+0047|equipamento: Barra
+0314|equipamento: Halter
+0496|exige barra/aparelho
+2400|exige barra/aparelho
+0499|exige barra/aparelho
+0498|exige barra/aparelho
+2300|exige barra/aparelho
+2298|exige barra/aparelho
+0497|exige barra/aparelho
+0500|exige barra/aparelho
+0558|exige barra/aparelho
+3288|carga alta nas articulações
+3419|carga alta nas articulações
+3418|exige barra/aparelho
+0709|exige barra/aparelho
+0720|exige barra/aparelho
+0032|equipamento: Barra
+0313|equipamento: Halter
+0627|exige barra/aparelho
+0628|equipamento: faixa elástica
+0630|impacto
+0631|exige barra/aparelho
+1401|exige barra/aparelho
+1763|exige barra/aparelho
+1273|carga alta nas articulações
+1473|impacto
+3302|carga alta nas articulações
+0471|carga alta nas articulações
+0431|equipamento: Halter
+1429|exige barra/aparelho
+1367|exige barra/aparelho
+1327|exige barra/aparelho
+0674|exige barra/aparelho
+0251|carga alta nas articulações
+1430|exige barra/aparelho
+2462|exige barra/aparelho
+0576|equipamento: Máquina
+0570|exige barra/aparelho
+1306|impacto
+0501|impacto
+3224|impacto
+2466|impacto
+0670|exige barra/aparelho
+0380|equipamento: Halter
+1687|afundo
+0375|equipamento: Halter
+1275|impacto
+3543|impacto
+3552|impacto
+0120|equipamento: Barra
+0027|equipamento: Barra
+0293|equipamento: Halter
+1423|exige barra/aparelho
+0672|carga alta nas articulações
+0677|exige barra/aparelho
+2571|carga alta nas articulações
+0678|exige barra/aparelho
+0085|equipamento: Barra
+1459|equipamento: Halter
+0031|equipamento: Barra
+1585|afundo
+0687|carga alta nas articulações
+0513|impacto
+3301|carga alta nas articulações
+0688|exige barra/aparelho
+3219|impacto
+3222|impacto
+0594|equipamento: Máquina
+0599|equipamento: Máquina
+1350|equipamento: Máquina
+0861|equipamento: Polia
+3656|impacto
+0725|carga alta nas articulações
+1489|carga alta nas articulações
+3361|impacto
+3671|impacto: salto
+3304|exige barra/aparelho
+0778|carga alta nas articulações
+3291|carga alta nas articulações
+3223|impacto
+0803|carga alta nas articulações
+0025|equipamento: Barra
+0289|equipamento: Halter
+0748|equipamento: Smith
+0805|exige barra/aparelho
+0809|exige barra/aparelho
+0472|exige barra/aparelho
+0476|exige barra/aparelho
+0475|exige barra/aparelho
+0474|exige barra/aparelho
+0806|exige barra/aparelho
+1761|exige barra/aparelho
+1764|exige barra/aparelho
+0473|exige barra/aparelho
+0808|exige barra/aparelho
+0807|exige barra/aparelho
+1753|exige barra/aparelho
+0814|carga alta nas articulações
+0812|exige barra/aparelho
+0813|exige barra/aparelho
+0815|carga alta nas articulações
+0638|exige barra/aparelho
+0639|carga alta nas articulações
+1476|carga alta nas articulações
+1759|carga alta nas articulações
+0730|carga alta nas articulações
+3420|carga alta nas articulações
+0826|exige barra/aparelho
+3637|impacto
+0858|impacto
+1604|afundo
+3470|carga alta nas articulações
+1472|impacto
