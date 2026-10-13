@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import Link from "next/link";
 import { AUTH_WINDOW_STYLE, AuthBackdrop, AuthLogo } from "@/components/AuthBrand";
 
 export default function LoginPage() {
@@ -91,10 +90,7 @@ export default function LoginPage() {
         </button>
       </form>
       <p className="mt-4 font-body text-body-sm text-on-surface-variant">
-        Não tem conta?{" "}
-        <Link href="/register" className="text-primary hover:underline">
-          Criar conta
-        </Link>
+        Não tem conta? Peça ao administrador.
       </p>
       </div>
     </div>

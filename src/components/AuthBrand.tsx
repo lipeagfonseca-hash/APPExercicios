@@ -24,7 +24,7 @@ export function AuthLogo() {
   );
 }
 
-// Login/register card: image from the "Janela de login" slot, if any.
+// Login card: image from the "Janela de login" slot, if any.
 export const AUTH_WINDOW_STYLE = {
   backgroundImage:
     "linear-gradient(rgba(15,19,29,0.8), rgba(15,19,29,0.8)), var(--brand-login-window, none)",

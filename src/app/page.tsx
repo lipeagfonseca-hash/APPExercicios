@@ -16,14 +16,8 @@ export default function Home() {
       </p>
       <div className="flex gap-4">
         <Link
-          href="/register"
-          className="rounded-lg bg-primary-container px-6 py-3 font-mono-label text-label-md uppercase tracking-wider text-on-primary-container hover:shadow-[0_0_25px_rgba(0,210,255,0.6)]"
-        >
-          Despertar
-        </Link>
-        <Link
           href="/login"
-          className="rounded-lg border border-primary-container/40 px-6 py-3 font-mono-label text-label-md uppercase tracking-wider text-primary hover:bg-primary-container/10"
+          className="rounded-lg bg-primary-container px-6 py-3 font-mono-label text-label-md uppercase tracking-wider text-on-primary-container hover:shadow-[0_0_25px_rgba(0,210,255,0.6)]"
         >
           Entrar
         </Link>
