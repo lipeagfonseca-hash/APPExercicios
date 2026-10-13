@@ -1,13 +1,17 @@
 // Backup lógico do banco em JSON, na pasta backups/ (ignorada pelo git).
 // ATENÇÃO: o arquivo contém hashes de senha e dados de usuários — nunca versionar nem compartilhar.
-// Uso: node scripts/backup-db.cjs
+// Uso: node scripts/backup-db.cjs          (banco de DESENVOLVIMENTO, o do .env.local)
+//      node scripts/backup-db.cjs --prod   (banco de PRODUÇÃO "neondb", mesmo servidor)
 const fs = require("fs");
 const path = require("path");
 const { Client } = require("pg");
 require("dotenv").config({ path: ".env.local", quiet: true });
 
 (async () => {
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  const url = new URL(process.env.DATABASE_URL);
+  if (process.argv.includes("--prod")) url.pathname = "/neondb";
+  console.log("banco:", url.pathname);
+  const client = new Client({ connectionString: url.toString() });
   await client.connect();
 
   const { rows: tabelas } = await client.query(

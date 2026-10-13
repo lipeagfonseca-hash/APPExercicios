@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 App de treino gamificado (Next.js 16 + Prisma 7 + Neon) com tema "Solo Leveling" (ARISE / SISTEMA). Em produção em **produção na Vercel** (URL, time e comando exato em `CLAUDE.local.md`; deploy com `vercel deploy --prod --scope <time>`; o Mestre autorizou deploys sem reconfirmar quando pedir).
 
 **Serviços ligados ao projeto (todos via Vercel, variáveis em `.env.local`):**
-- **Neon Postgres** — banco único, compartilhado entre dev e prod. 6 migrations aplicadas (a última: `exercises`). Dados hoje são só de teste (3 usuários, 4 treinos).
+- **Neon Postgres** — **dois bancos no mesmo projeto Neon (separados em 2026-10-13)**: `neondb` = PRODUÇÃO (variáveis da Vercel) e `treino_dev` = desenvolvimento (o `DATABASE_URL`/`DATABASE_URL_UNPOOLED` do `.env.local` local apontam para ele). Mesmo servidor e mesma cota de compute, dados isolados. `vercel env pull` SOBRESCREVE o `.env.local` com a URL de produção: depois de rodar, troque `/neondb` por `/treino_dev` nessas duas variáveis. Migration nova: `npx prisma migrate dev` (local, no `treino_dev`) e, só depois de testar, `DATABASE_URL=<url de neondb> npx prisma migrate deploy` para produção. Backup: `node scripts/backup-db.cjs --prod`. Vercel Preview/Development usam as mesmas variáveis de produção. Migrations aplicadas nos dois (a última: `rotacao_treino_do_dia`). Os dados de produção hoje são só de teste (5 usuários). O `treino_dev` começa vazio, só com o usuário admin de desenvolvimento.
 - **Upstash Redis** (vars `KV_*`/`REDIS_URL`) — usado só pelo rate limit.
 - **Vercel Blob público** (`BLOB_READ_WRITE_TOKEN`) — imagens da identidade visual.
 - **`ADMIN_EMAILS`** (env, produção/preview/dev) — lista de admins separados por vírgula; vazio = ninguém é admin. Email do admin: ver `CLAUDE.local.md` (senha nunca em arquivo).
@@ -127,7 +127,7 @@ Tudo por **tempo** (nunca repetições), baixo impacto (sem saltos, burpee, afun
 npm run dev      # start dev server (Turbopack) on :3000 — kills nothing automatically, check for a stale process on the port first (see Gotchas)
 npm run build    # production build; also runs TypeScript checks
 npm run lint     # eslint
-npx prisma migrate dev --name <name>   # create + apply a migration (local and prod share one Neon DB, see below)
+npx prisma migrate dev --name <name>   # create + apply a migration (roda no `treino_dev` local; produção só com `migrate deploy`, veja Neon acima)
 npx prisma generate                    # regenerate client into src/generated/prisma — required after every schema change
 npx prisma studio                      # browse the database
 vercel deploy --prod --scope <time>   # deploy to production (time/projeto em CLAUDE.local.md)
@@ -141,7 +141,7 @@ This is a Next.js 16 App Router fitness app skinned as a Solo Leveling-style "Sy
 
 ### Data layer
 
-- **Database**: single Postgres instance (Neon, via Vercel's native integration). Local dev and production point at the *same* database — there is no separate dev DB. `.env.local` holds `DATABASE_URL` (pulled via `vercel env pull`).
+- **Database**: single Postgres instance (Neon, via Vercel's native integration). Production uses database `neondb`; local dev uses `treino_dev` in the same Neon project (`.env.local` holds that `DATABASE_URL`; `vercel env pull` would overwrite it with the production URL, see Neon notes at the top).
 - **Prisma 7** uses the new driver-adapter architecture: `PrismaClient` must be constructed with an explicit adapter (`src/lib/prisma.ts` wires up `@prisma/adapter-pg`). Omitting the adapter throws at runtime, not at build time.
 - Generated client lives at `src/generated/prisma` (not `node_modules/.prisma`), imported as `@/generated/prisma/client`. Config is `prisma7.config.ts`, not `schema.prisma`-embedded env — it loads `.env.local` then `.env`.
 - Modelos (`prisma/schema.prisma`): ver a lista em "The gamification engine" acima.
@@ -174,4 +174,4 @@ Tailwind class names built with template-literal interpolation (e.g. `` `bg-${co
 
 - **Prisma client survives hot reload stale.** The `globalForPrisma` singleton in `prisma.ts` is cached on `globalThis` across Turbopack HMR. After `prisma migrate dev` / schema changes, a running `npm run dev` will throw "X is not a function" on the new model/field until the dev server is fully killed and restarted — hot reload is not enough.
 - **Rotina de treino usa o dia de Brasília** (`diaBrasilia.ts`); **o restante da lógica antiga** (se sobrar) é UTC. **Dates were UTC everywhere in gameplay logic** (streaks, daily quest "today", training-cycle day index, calendar). Mixing in local-time `Date` math reintroduces off-by-one-day bugs that have already been fixed once.
-- Local dev and production share the one Neon database — there's no seed/reset step, migrations run against real data.
+- Dev e produção têm bancos separados (`treino_dev` e `neondb`, mesmo projeto Neon). Cuidado: `vercel env pull` reaponta o `.env.local` para produção; scripts que leem o `.env.local` (`criar-usuario-aquecedor.cjs`, `backup-db.cjs`, `import-exercises.cjs`) agem no banco de DESENVOLVIMENTO a menos que você troque a URL (o backup tem `--prod`).
