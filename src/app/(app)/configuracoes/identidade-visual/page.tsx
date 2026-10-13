@@ -1,7 +1,9 @@
 import { getBrand } from "@/lib/brand";
+import { sessaoDeAdmin } from "@/lib/sessao";
 import BrandManager from "@/components/BrandManager";
 
 export default async function BrandSettingsPage() {
+  await sessaoDeAdmin();
   const brand = await getBrand();
 
   return (

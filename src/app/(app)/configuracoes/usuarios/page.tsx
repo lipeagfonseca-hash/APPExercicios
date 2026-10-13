@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import { sessaoDeAdmin } from "@/lib/sessao";
 import UserCreateForm from "@/components/UserCreateForm";
 import UserRow from "@/components/UserRow";
 import { isAdminEmail } from "@/lib/admin";
 import { EMAIL_DO_USUARIO_AQUECEDOR } from "@/config/aquecimento";
 
 export default async function UsersSettingsPage() {
+  await sessaoDeAdmin();
   const users = await prisma.user.findMany({
     select: { id: true, name: true, email: true, createdAt: true, desativadoEm: true },
     orderBy: { createdAt: "asc" },

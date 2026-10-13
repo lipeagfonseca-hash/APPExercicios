@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { auth } from "@/lib/auth";
+import { isAdminEmail } from "@/lib/admin";
 
 /**
  * Sessão para uso em componentes de servidor (páginas e layouts).
@@ -22,5 +23,16 @@ export async function sessaoDoServidor() {
 export async function sessaoObrigatoria() {
   const session = await sessaoDoServidor();
   if (!session?.user) redirect("/login");
+  return session;
+}
+
+/**
+ * Para páginas de administração. Cada página admin precisa chamar isto ANTES de consultar
+ * qualquer dado: o redirecionamento do layout não basta, porque o Next renderiza o layout e a
+ * página ao mesmo tempo e a página chegaria a ser enviada a quem não é admin.
+ */
+export async function sessaoDeAdmin() {
+  const session = await sessaoObrigatoria();
+  if (!isAdminEmail(session.user.email)) redirect("/dashboard");
   return session;
 }
