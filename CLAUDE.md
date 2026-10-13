@@ -141,6 +141,41 @@ Tudo por **tempo** (nunca repetições), baixo impacto (sem saltos, burpee, afun
 - Páginas autenticadas com tudo quente: 280–540 ms até o fim do HTML (primeiro pedaço do casco em ~125 ms). Primeira abertura depois de ocioso: `/dashboard` ~2,5 s (boot da função + Neon dormindo); alguns picos de 1,5–1,8 s em `/calendario` logo após deploy. É o limite do Neon Free + Vercel Hobby (ver "Aquecimento"); fora das janelas de aquecimento continua frio.
 - Melhorias possíveis: (a) ajustar as janelas de aquecimento aos horários reais de treino (falta o Mestre informar); (b) Neon Launch (~US$ 19/mês sempre ligado) só se o frio incomodar; (c) `/exercicios` entrega 136 KB de HTML com os 161 itens: se crescer, paginar no servidor; (d) as telas de login e inicial não têm `<main>` (única falha de acessibilidade do Lighthouse); (e) o `proxy.ts` ainda é uma função separada que atrasa o casco frio.
 
+### Plano para os 6 pontos de observação (traçado em 2026-10-13, ainda NÃO executado)
+Ordem sugerida: P2 -> P6 -> P5 -> P1 -> P3 -> P4 (do mais barato e seguro ao que depende de decisão do Mestre). Cada item termina com `npm test`, `npm run lint`, `npm run build`, commit separado em português e, se mudar o app, deploy. Nenhum plano toca dados de produção nem infraestrutura sem pedir antes.
+
+**P1 — Sessão de 30 dias sem revogação** (esforço médio; fazer junto com "remover usuário")
+- Objetivo: quem for removido ou desativado perde o acesso em minutos, e a sessão deixa de durar 30 dias.
+- Passos: (1) em `src/lib/auth.config.ts` definir `session: { strategy: "jwt", maxAge: 14 dias, updateAge: 1 dia }` (7 dias se o Mestre preferir mais seguro; o custo é logar de novo). (2) Revogação: em `src/lib/auth.ts` (que pode usar o banco; o `proxy.ts` usa só `auth.config.ts`, sem Prisma) acrescentar ao callback `jwt` uma conferência com `token.verificadoEm`: se passou mais de 10 min, consultar `prisma.user` (existe? não está desativado?) e, se não, devolver token sem `id` (a sessão vira anônima e as páginas redirecionam ao login). Assim o custo é ~1 consulta a cada 10 min por usuário, não a cada pedido. (3) Decidir com o Mestre: remover = apagar o `User` (cascata apaga perfil e treinos, irreversível) ou **desativar** com coluna `desativadoEm` (migration aditiva com `down.sql`, histórico preservado). Recomendação: desativar primeiro, apagar só por ação separada e confirmada. (4) Construir a aba Usuários: trocar senha (bcrypt custo 12, mesma regra de senha) e desativar/reativar, todas via rota admin com a mesma checagem de servidor de `/api/admin/usuarios`; o admin não pode desativar a si mesmo.
+- Teste: conta de teste logada no `treino_dev`, desativar e conferir que em <= 10 min as páginas redirecionam ao login; `proxy.ts` continua sem banco.
+- Risco/rollback: `maxAge` e o callback voltam por revert; a coluna nova tem `down.sql`.
+
+**P2 — Rate limit em `/api/nutrition`** (esforço baixo, ~15 min)
+- Passos: em `src/app/api/nutrition/route.ts` repetir o padrão de `treino-do-dia/iniciar`: `rateLimit(`nutricao:${session.user.id}`, 20, 60_000)` depois da checagem de sessão, 429 com `Retry-After`. Limite generoso (formulário raramente enviado).
+- Teste: 21 envios seguidos no local (`treino_dev`) devolvem 429 no 21º; um envio normal continua 200.
+
+**P3 — Backups só manuais** (esforço médio; precisa de decisão do Mestre sobre onde guardar)
+- Alerta: **não** fazer o backup agendado como "artifact" do GitHub Actions: em repositório público os artifacts podem ser baixados por qualquer pessoa logada no GitHub, e o backup contém hashes de senha e dados pessoais.
+- Opção recomendada (A): tarefa agendada no Windows do Mestre rodando `node scripts/backup-db.cjs --prod` toda semana, gravando em pasta local fora do git (`backups/`, já ignorada), com limpeza dos arquivos com mais de 8 semanas (acrescentar ao script um `--manter 8`). Depende do computador ligado. Passos: acrescentar a limpeza ao script e criar a tarefa com `schtasks` (peço autorização antes de criar).
+- Opção (B): job semanal que gera o dump, **criptografa** (age/gpg com chave pública do Mestre; a privada fica só com ele) e guarda em armazenamento privado. Mais robusto, mais peças; só se o Mestre quiser backup independente do computador.
+- Em paralelo: conferir no painel do Neon qual é a janela de restauração por ponto no tempo do plano Free e anotar aqui; restaurar é o plano principal para erro recente, o backup é para desastre.
+- Teste: rodar o script, abrir o arquivo e conferir contagem de linhas por tabela contra o banco; fazer um restore de ensaio no `treino_dev` (nunca em produção) uma vez para provar que o backup serve.
+
+**P4 — Preview e Development da Vercel usam o banco e o `AUTH_SECRET` de produção** (esforço baixo, mas precisa checar o painel)
+- Hoje só deployamos produção, então o risco está parado; vira real no primeiro `vercel deploy` sem `--prod` ou PR com preview.
+- Passos: (1) conferir no painel (Settings > Environment Variables) se as variáveis do banco, que a integração Neon gerencia ("Config"), aceitam valor diferente por ambiente; (2) se aceitarem: apontar **Preview e Development** para o `treino_dev` (URL pooled e unpooled com `/treino_dev`) e criar `AUTH_SECRET` próprio para eles; (3) se não aceitarem: desligar a opção da integração Neon para ambientes de preview, ou manter a regra escrita "só deploy de produção"; (4) conferir que `ADMIN_EMAILS`, Blob e Redis de preview não escrevem em produção (o Redis é só rate limit; o Blob de preview gravaria na marca real, então usar outro token ou desligar upload em preview).
+- Teste: deploy de preview de um branch descartável e `curl` ao `/api/admin/usuarios` + login de teste, conferindo que a lista de usuários é a do `treino_dev` (vazia/de teste), nunca a de produção.
+- Não alterar variáveis da Vercel sem avisar o Mestre.
+
+**P5 — Avisos do `npm audit` (prisma -> mysql2 / deepmerge-ts)** (esforço baixo/médio, com teste)
+- Situação: `mysql2@3.15.3` vem embutido na ferramenta de CLI do Prisma (não usamos MySQL; não roda em produção). Já existe `mysql2@3.24.5`, fora da faixa vulnerável (<= 3.23.0). A correção automática (`audit fix --force`) faz downgrade do Prisma para 6.19, **não usar**.
+- Passos: (1) em `package.json` acrescentar `"overrides": { "mysql2": "^3.24.5" }` (e testar `deepmerge-ts` do mesmo jeito se o audit continuar acusando); (2) `npm install`, `npx prisma generate`, `npx prisma migrate status` (no `treino_dev`), `npm test`, `npm run build`; (3) `npm audit --omit=dev` para ver o que sobrou. Se o Prisma CLI quebrar com o `mysql2` novo, desfazer o override e só registrar o aviso.
+- Risco: baixo (afeta só a CLI). Rollback: remover o `overrides` e reinstalar.
+
+**P6 — Telas de login e inicial sem `<main>`** (esforço baixo, ~10 min)
+- Passos: trocar o `div` mais externo de `src/app/(auth)/login/page.tsx` e `src/app/page.tsx` por `<main>` (mesmas classes). Conferir se a página `/` e o login não ficam com dois `<main>` (o `AppShell` já usa um; o login não passa por ele).
+- Teste: Lighthouse no `/login` (acessibilidade deve ir de 98 para 100) e checagem visual igual.
+
 ### Últimas alterações (2026-10-12)
 1. Auditoria completa (build, lint, migrations, rotas protegidas, `npm audit`) e correção dos 2 erros de lint (`conquistas` com `Date.now()` virou `accountAgeInDays()`; `WorkoutForm` com `eslint-disable` justificado).
 2. Hardening de segurança (seção acima) e deploy.
