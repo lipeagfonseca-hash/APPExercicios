@@ -1,9 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import UserCreateForm from "@/components/UserCreateForm";
+import UserRow from "@/components/UserRow";
+import { isAdminEmail } from "@/lib/admin";
+import { EMAIL_DO_USUARIO_AQUECEDOR } from "@/config/aquecimento";
 
 export default async function UsersSettingsPage() {
   const users = await prisma.user.findMany({
-    select: { id: true, name: true, email: true, createdAt: true },
+    select: { id: true, name: true, email: true, createdAt: true, desativadoEm: true },
     orderBy: { createdAt: "asc" },
   });
 
@@ -25,15 +28,15 @@ export default async function UsersSettingsPage() {
         </h2>
         <ul className="flex flex-col gap-2">
           {users.map((u) => (
-            <li
+            <UserRow
               key={u.id}
-              className="flex flex-col rounded-lg border border-primary-container/10 bg-surface-container-lowest/60 px-4 py-2"
-            >
-              <span className="font-body text-body-md text-on-surface">{u.name}</span>
-              <span className="font-mono-label text-label-sm text-on-surface-variant">
-                {u.email}
-              </span>
-            </li>
+              id={u.id}
+              name={u.name}
+              email={u.email}
+              desativado={u.desativadoEm !== null}
+              interno={u.email === EMAIL_DO_USUARIO_AQUECEDOR}
+              admin={isAdminEmail(u.email)}
+            />
           ))}
         </ul>
       </section>

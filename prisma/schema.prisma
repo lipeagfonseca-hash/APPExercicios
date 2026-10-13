@@ -18,6 +18,8 @@ model User {
   email             String            @unique
   password          String
   createdAt         DateTime          @default(now())
+  /// Conta desativada pelo admin: não consegue entrar e a sessão atual cai em poucos minutos.
+  desativadoEm      DateTime?
   workouts          Workout[]
   playerProfile     PlayerProfile?
   nutritionProfile  NutritionProfile?

@@ -5,15 +5,15 @@
 // escolhe o treino: quem decide é o sistema (veja o Dashboard).
 // ============================================================================
 
-import { sessaoDoServidor } from "@/lib/sessao";
+import { sessaoObrigatoria } from "@/lib/sessao";
 import { carregarVisaoDoDia } from "@/lib/rotacaoServico";
 import { ID_DO_DESCANSO, SEQUENCIA_DA_ROTACAO } from "@/config/rotacao";
 import { duracaoTotalEmSegundos, TREINOS } from "@/config/treinos";
 import { formatClock } from "@/lib/timedProgram";
 
 export default async function ProgramsPage() {
-  const session = await sessaoDoServidor();
-  const visao = await carregarVisaoDoDia(session!.user.id);
+  const session = await sessaoObrigatoria();
+  const visao = await carregarVisaoDoDia(session.user.id);
 
   const itemDeHoje =
     visao.estado.tipo === "TREINO_PENDENTE"

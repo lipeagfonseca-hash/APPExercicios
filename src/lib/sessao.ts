@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { auth } from "@/lib/auth";
 
@@ -12,4 +13,14 @@ import { auth } from "@/lib/auth";
 export async function sessaoDoServidor() {
   await connection();
   return auth();
+}
+
+/**
+ * Para páginas que só existem para quem está logado. Se a sessão caiu (conta desativada ou
+ * apagada, ou cookie antigo), manda para o login em vez de quebrar a página.
+ */
+export async function sessaoObrigatoria() {
+  const session = await sessaoDoServidor();
+  if (!session?.user) redirect("/login");
+  return session;
 }

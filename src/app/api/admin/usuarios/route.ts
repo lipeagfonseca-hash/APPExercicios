@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
-import { isAdminEmail } from "@/lib/admin";
+import { exigirAdmin } from "@/lib/exigirAdmin";
+import { senhaSchema } from "@/lib/senhaForte";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rateLimit";
 
@@ -12,21 +12,16 @@ const criarSchema = z.object({
   nome: z.string().trim().min(1).max(60),
   sobrenome: z.string().trim().min(1).max(60),
   email: z.string().trim().toLowerCase().email().max(254),
-  senha: z
-    .string()
-    .min(8)
-    .max(72)
-    .regex(/[A-Za-z]/, "A senha precisa ter ao menos uma letra.")
-    .regex(/\d/, "A senha precisa ter ao menos um número."),
+  senha: senhaSchema,
 });
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user?.id || !isAdminEmail(session.user.email)) {
+  const admin = await exigirAdmin();
+  if (!admin) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 403 });
   }
 
-  const limite = await rateLimit(`admin:criar-usuario:${session.user.id}`, 30, 60 * 60_000);
+  const limite = await rateLimit(`admin:criar-usuario:${admin.id}`, 30, 60 * 60_000);
   if (!limite.ok) {
     return NextResponse.json(
       { error: "Muitas tentativas. Tente novamente mais tarde." },

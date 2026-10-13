@@ -12,7 +12,9 @@
 import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
-  session: { strategy: "jwt" },
+  // O navegador de cada pessoa fica logado por 14 dias e o prazo é renovado a cada dia de uso;
+  // quem passa mais de 14 dias sem abrir o app só precisa entrar de novo.
+  session: { strategy: "jwt", maxAge: 14 * 24 * 60 * 60, updateAge: 24 * 60 * 60 },
   pages: { signIn: "/login" },
   providers: [], // o provedor de credenciais é acrescentado em auth.ts
   callbacks: {

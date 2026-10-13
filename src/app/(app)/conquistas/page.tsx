@@ -1,12 +1,12 @@
-import { sessaoDoServidor } from "@/lib/sessao";
+import { sessaoObrigatoria } from "@/lib/sessao";
 import { prisma } from "@/lib/prisma";
 import { carregarEstatisticas } from "@/lib/estatisticas";
 import { EXERCISE_RANKS, type ExerciseRank } from "@/lib/rank";
 import { accountAgeInDays, evaluateAchievements } from "@/lib/achievements";
 
 export default async function AchievementsPage() {
-  const session = await sessaoDoServidor();
-  const userId = session!.user.id;
+  const session = await sessaoObrigatoria();
+  const userId = session.user.id;
 
   const [user, estatisticas] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: userId } }),

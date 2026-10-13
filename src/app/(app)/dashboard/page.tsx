@@ -5,7 +5,7 @@
 // partir do ponteiro da rotação; o usuário não escolhe.
 // ============================================================================
 
-import { sessaoDoServidor } from "@/lib/sessao";
+import { sessaoObrigatoria } from "@/lib/sessao";
 import { prisma } from "@/lib/prisma";
 import { carregarVisaoDoDia } from "@/lib/rotacaoServico";
 import { formatClock } from "@/lib/timedProgram";
@@ -38,8 +38,8 @@ function itemSeguinte(posicao: number): string {
 const CARTAO = "rounded-xl bg-surface-container-lowest/80 backdrop-blur-xl";
 
 export default async function DashboardPage() {
-  const session = await sessaoDoServidor();
-  const userId = session!.user.id;
+  const session = await sessaoObrigatoria();
+  const userId = session.user.id;
 
   // Tudo em paralelo: a visão do dia, o log do sistema e os treinos recentes não dependem
   // uns dos outros, então levam o tempo de UMA ida ao banco (e não de três em fila).
