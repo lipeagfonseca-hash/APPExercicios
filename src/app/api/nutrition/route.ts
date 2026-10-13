@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rateLimit";
 
 const nutritionSchema = z.object({
   weightKg: z.number().positive().max(400),
@@ -17,6 +18,14 @@ export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+  }
+
+  const limite = await rateLimit(`nutricao:${session.user.id}`, 20, 60_000);
+  if (!limite.ok) {
+    return NextResponse.json(
+      { error: "Muitas tentativas. Aguarde um instante." },
+      { status: 429, headers: { "Retry-After": String(limite.retryAfter) } },
+    );
   }
 
   const body = await request.json().catch(() => null);
