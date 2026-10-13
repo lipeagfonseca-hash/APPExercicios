@@ -1,11 +1,11 @@
-import { auth } from "@/lib/auth";
+import { sessaoDoServidor } from "@/lib/sessao";
 import { prisma } from "@/lib/prisma";
 import { calculateCalorieGoal, calculateMacros } from "@/lib/nutrition";
 import NutritionForm from "@/components/NutritionForm";
 import WeightGoalChart from "@/components/WeightGoalChart";
 
 export default async function NutritionPage() {
-  const session = await auth();
+  const session = await sessaoDoServidor();
   const userId = session!.user.id;
 
   const profile = await prisma.nutritionProfile.findUnique({

@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { sessaoDoServidor } from "@/lib/sessao";
 import { prisma } from "@/lib/prisma";
 import { TREINOS } from "@/config/treinos";
 import { esforcoDeUmTreino } from "@/lib/esforco";
@@ -7,7 +7,7 @@ import HistoryChart from "@/components/HistoryChart";
 const CARTAO = "rounded-xl bg-surface-container-lowest/80 backdrop-blur-xl p-4";
 
 export default async function HistoryPage() {
-  const session = await auth();
+  const session = await sessaoDoServidor();
 
   const concluidos = await prisma.treinoConcluido.findMany({
     where: { userId: session!.user.id },

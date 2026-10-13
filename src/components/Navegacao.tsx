@@ -7,7 +7,7 @@
 // do CDN, e esta parte chega por streaming assim que a função responde.
 // ============================================================================
 
-import { auth } from "@/lib/auth";
+import { sessaoDoServidor } from "@/lib/sessao";
 import { carregarVisaoDoDia } from "@/lib/rotacaoServico";
 import { segundosAteMeiaNoite } from "@/lib/diaBrasilia";
 import { isAdminEmail } from "@/lib/admin";
@@ -16,7 +16,7 @@ import HudHeader from "@/components/HudHeader";
 import BottomNav from "@/components/BottomNav";
 
 export default async function Navegacao() {
-  const session = await auth();
+  const session = await sessaoDoServidor();
   if (!session?.user) return null;
 
   // Calculada uma vez por requisição (a página também usa a mesma visão).

@@ -57,13 +57,28 @@ export type VisaoDoDia = {
   treinoIniciado: boolean;
 };
 
+/**
+ * Cria o perfil do primeiro acesso. No primeiro acesso de uma conta nova chegam vários
+ * pedidos ao mesmo tempo (menu e página); se outro pedido criou o perfil antes, a
+ * restrição UNIQUE(userId) avisa (P2002) e basta ler o que já existe.
+ */
+async function criarPerfil(userId: string) {
+  try {
+    return await prisma.playerProfile.create({ data: { userId } });
+  } catch (erro) {
+    if (typeof erro === "object" && erro && "code" in erro && erro.code === "P2002") {
+      return prisma.playerProfile.findUniqueOrThrow({ where: { userId } });
+    }
+    throw erro;
+  }
+}
+
 async function calcularVisaoDoDia(userId: string, agora: Date): Promise<VisaoDoDia> {
   const hoje = diaDeBrasilia(agora);
 
   // Caso comum: 1 leitura. Só cria o perfil se ele ainda não existir (primeiro acesso).
   const perfil =
-    (await prisma.playerProfile.findUnique({ where: { userId } })) ??
-    (await prisma.playerProfile.create({ data: { userId } }));
+    (await prisma.playerProfile.findUnique({ where: { userId } })) ?? (await criarPerfil(userId));
 
   // Perfil novo ainda não tem dia de início: a rotação começa hoje, no Treino 1.
   const ponteiroGuardado: Ponteiro = {

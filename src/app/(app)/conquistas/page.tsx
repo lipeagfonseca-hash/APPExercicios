@@ -1,11 +1,11 @@
-import { auth } from "@/lib/auth";
+import { sessaoDoServidor } from "@/lib/sessao";
 import { prisma } from "@/lib/prisma";
 import { carregarEstatisticas } from "@/lib/estatisticas";
 import { EXERCISE_RANKS, type ExerciseRank } from "@/lib/rank";
 import { accountAgeInDays, evaluateAchievements } from "@/lib/achievements";
 
 export default async function AchievementsPage() {
-  const session = await auth();
+  const session = await sessaoDoServidor();
   const userId = session!.user.id;
 
   const [user, estatisticas] = await Promise.all([

@@ -6,7 +6,7 @@
 //  - os atributos (STR/AGI/END/VIT) são recalculados desse mesmo histórico.
 // ============================================================================
 
-import { auth } from "@/lib/auth";
+import { sessaoDoServidor } from "@/lib/sessao";
 import { carregarEstatisticas } from "@/lib/estatisticas";
 import { DESCRICAO_DOS_ATRIBUTOS, type Atributo } from "@/lib/atributos";
 import { RankBadge, RankLadder } from "@/components/RankHexagon";
@@ -19,7 +19,7 @@ function formatarMinutos(minutos: number) {
 }
 
 export default async function RankPage() {
-  const session = await auth();
+  const session = await sessaoDoServidor();
   const { ranks, atributos, treinosConcluidos } = await carregarEstatisticas(session!.user.id);
 
   return (

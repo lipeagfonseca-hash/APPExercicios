@@ -6,7 +6,7 @@
 // ============================================================================
 
 import Link from "next/link";
-import { auth } from "@/lib/auth";
+import { sessaoDoServidor } from "@/lib/sessao";
 import { prisma } from "@/lib/prisma";
 import { carregarVisaoDoDia } from "@/lib/rotacaoServico";
 import { projetarProximosDias } from "@/lib/rotacao";
@@ -44,7 +44,7 @@ export default async function CalendarPage({
 }: {
   searchParams: Promise<{ month?: string }>;
 }) {
-  const session = await auth();
+  const session = await sessaoDoServidor();
   const userId = session!.user.id;
   const visao = await carregarVisaoDoDia(userId);
   const hoje = visao.hoje;
