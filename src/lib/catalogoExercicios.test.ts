@@ -5,19 +5,28 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { EXERCICIOS } from "../config/exercicios.ts";
 
-type Item = { id: string; nome: string; nomeEn: string; instrucoesEn: string | null; busca: string };
+type Item = {
+  id: string;
+  nome: string;
+  nomeEn: string;
+  instrucoesPt: string;
+  instrucoesEn: string | null;
+  busca: string;
+};
 
 const catalogo = JSON.parse(
   readFileSync(new URL("../data/catalogo-exercicios.json", import.meta.url), "utf8"),
 ) as Item[];
 
-test("o catálogo estático tem os 162 exercícios (sem barras/academia nem impacto), com ids únicos e nomes em português", () => {
-  assert.equal(catalogo.length, 162);
+test("o catálogo estático tem os 161 exercícios (sem barras/academia nem impacto), com ids únicos e nomes em português", () => {
+  assert.equal(catalogo.length, 161);
   assert.equal(new Set(catalogo.map((e) => e.id)).size, catalogo.length);
   for (const e of catalogo) {
     assert.match(e.id, /^\d{4}$/);
     assert.ok(e.nome.length > 0, e.id);
     assert.ok(e.instrucoesEn, `instruções de ${e.id}`);
+    assert.ok(e.instrucoesPt.length > 40, `instruções em português de ${e.id}`);
+    assert.doesNotMatch(e.instrucoesPt, /(Lie|Stand|Place|Repeat|your)/, `${e.id} ainda em inglês`);
   }
 });
 

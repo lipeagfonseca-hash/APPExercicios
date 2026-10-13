@@ -21,6 +21,13 @@ const excluidos = new Set(
     .split(/\r?\n/).filter(Boolean).map((l) => l.slice(0, l.indexOf("|"))),
 );
 
+// Instruções em português feitas à mão (id|texto). Todo exercício do catálogo precisa ter uma.
+const instrucoesPt = new Map(
+  fs.readFileSync(path.join(__dirname, "../data/exercises/instrucoes-pt.txt"), "utf8")
+    .split(/\r?\n/).filter(Boolean)
+    .map((l) => [l.slice(0, l.indexOf("|")), l.slice(l.indexOf("|") + 1).trim()]),
+);
+
 const normalizar = (s) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 
@@ -37,6 +44,7 @@ const catalogo = linhas
       equipamento: r.equipment,
       alvo: r.target,
       secundarios: r.secondary ?? [],
+      instrucoesPt: instrucoesPt.get(r.id) ?? (() => { throw new Error(`Sem instruções em português para ${r.id} (${r.nameEn})`); })(),
       instrucoesEn: r.instructionsEn ?? null,
       instrucoesEs: r.instructionsEs ?? null,
       // texto de busca já normalizado (sem acento, minúsculo)

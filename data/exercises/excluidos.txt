@@ -90,6 +90,7 @@
 0488|exige barra/aparelho
 3289|carga alta nas articulações
 0495|exige banco inclinado
+3011|exige banco inclinado
 0492|impacto
 0491|exige banco inclinado
 3300|carga alta nas articulações

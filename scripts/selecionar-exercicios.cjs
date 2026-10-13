@@ -37,7 +37,7 @@ const INCLUIR = new Set(["0138", "0870", "2429", "0668", "0696", "1355", "1386",
 const EXCLUIR = new Map([
   ["1770", "equipamento: halter (descrição)"], ["3193", "equipamento: máquina (descrição)"],
   ["0020", "equipamento: prancha de equilíbrio"], ["0628", "equipamento: faixa elástica"],
-  ["0495", "exige banco inclinado"], ["0491", "exige banco inclinado"],
+  ["0495", "exige banco inclinado"], ["0491", "exige banco inclinado"], ["3011", "exige banco inclinado"],
   ["3672", "afundo"], ["2368", "afundo"], ["1687", "afundo"], ["3769", "afundo"],
   ["1604", "afundo"], ["1585", "afundo"],
   ["3671", "impacto: salto"], ["1418", "impacto: salto"], ["0257", "carga alta nas articulações"],

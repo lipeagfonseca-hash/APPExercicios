@@ -23,6 +23,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       equipment: e.equipamento,
       target: e.alvo,
       secondary: e.secundarios,
+      instructionsPt: e.instrucoesPt,
       instructionsEn: e.instrucoesEn,
       instructionsEs: e.instrucoesEs,
     },

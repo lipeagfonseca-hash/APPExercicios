@@ -11,6 +11,7 @@ type Detail = {
   equipment: string;
   target: string;
   secondary: string[];
+  instructionsPt: string | null;
   instructionsEn: string | null;
   instructionsEs: string | null;
 };
@@ -27,7 +28,7 @@ export default function ExerciseDetailModal({
 }) {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [failed, setFailed] = useState(false);
-  const [lang, setLang] = useState<"es" | "en">("es");
+  const [lang, setLang] = useState<"pt" | "es" | "en">("pt");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -47,9 +48,10 @@ export default function ExerciseDetailModal({
   }, [onClose]);
 
   const instructions = detail
-    ? (lang === "es" ? detail.instructionsEs : detail.instructionsEn) ??
+    ? ({ pt: detail.instructionsPt, es: detail.instructionsEs, en: detail.instructionsEn }[lang] ??
+      detail.instructionsPt ??
       detail.instructionsEn ??
-      detail.instructionsEs
+      detail.instructionsEs)
     : null;
 
   return (
@@ -128,7 +130,7 @@ export default function ExerciseDetailModal({
                     Instruções
                   </span>
                   <span className="flex gap-2 font-mono-label text-label-sm">
-                    {(["es", "en"] as const).map((l) => (
+                    {(["pt", "es", "en"] as const).map((l) => (
                       <button
                         key={l}
                         type="button"
@@ -137,7 +139,7 @@ export default function ExerciseDetailModal({
                           lang === l ? "text-primary" : "text-on-surface-variant hover:text-on-surface"
                         }
                       >
-                        {l === "es" ? "ESP" : "ENG"}
+                        {l === "pt" ? "PT" : l === "es" ? "ESP" : "ENG"}
                       </button>
                     ))}
                   </span>

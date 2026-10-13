@@ -18,6 +18,7 @@ export type ExercicioDoCatalogo = {
   equipamento: string;
   alvo: string;
   secundarios: string[];
+  instrucoesPt: string;
   instrucoesEn: string | null;
   instrucoesEs: string | null;
   /** Texto de busca já normalizado (sem acento, minúsculo). */
