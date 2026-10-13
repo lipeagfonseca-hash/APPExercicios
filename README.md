@@ -15,12 +15,11 @@ Upstash Redis (rate limit) · Vercel Blob (identidade visual).
 |---|---|
 | Commits | aba **Code → Commits** |
 | Pushes e verificações (lint, testes, build) | aba **Actions → Simple workflow** — roda a cada push e pull request, com resumo do commit |
-| Deploys em produção | aba **Actions → Deploy em produção (manual)** e **Code → Deployments** |
+| Deploys em produção | aba **Code → Deployments** (cada deploy é registrado ali no momento em que é publicado) |
 
-O deploy é manual de propósito: o banco é compartilhado entre desenvolvimento e produção.
-Para publicar, vá em Actions → *Deploy em produção (manual)* → *Run workflow*.
-Antes, configure os segredos `VERCEL_TOKEN`, `VERCEL_ORG_ID` e `VERCEL_PROJECT_ID`
-(Settings → Secrets and variables → Actions).
+O deploy é feito pelo assistente, direto do computador (`vercel deploy --prod`), e em seguida
+registrado no GitHub com `node scripts/registrar-deploy.cjs`. Não há botão de deploy nem
+segredo da Vercel no GitHub: o Actions só roda a verificação (lint, testes e build).
 
 ## Rodar localmente
 
