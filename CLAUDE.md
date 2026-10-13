@@ -112,6 +112,35 @@ Tudo por **tempo** (nunca repetições), baixo impacto (sem saltos, burpee, afun
 - **`VERCEL_TOKEN` é opcional**: só o workflow `deploy-manual.yml` (botão de deploy no GitHub) precisa dele, porque roda nos servidores do GitHub e não enxerga o login local do Vercel CLI. O assistente publica direto do computador com `vercel deploy --prod --scope gladistone` (login local), então o token não é necessário para o fluxo normal. Só vale criar (no painel da Vercel, escopo mínimo) se o Mestre quiser deployar pelo GitHub.
 - **Próximo passo combinado**: Fase 4 (limpeza geral). Começa **só listando**: registros "Missão Diária" vazios, contas de teste, tabelas legadas (`Workout*`, colunas str/vit/agi/end, `Exercise`), auditoria das rotas de escrita (sessão + dono do registro, admin validado no servidor) e código morto. Nada é apagado antes de o Mestre aprovar a lista. Depois: trocar senha e remover usuário na aba Usuários.
 
+### Verificação completa de segurança e fluidez (2026-10-13, produção)
+**Corrigido nesta verificação**
+- Corrida no primeiro acesso de uma conta nova: menu e página criavam o `PlayerProfile` ao mesmo tempo e o segundo batia no `UNIQUE(userId)` (P2002). Agora `criarPerfil` (`src/lib/rotacaoServico.ts`) captura e lê o perfil existente. Importante porque contas só nascem pelo admin e o perfil é criado no primeiro acesso. Testado com 8 pedidos simultâneos de uma conta nova.
+- Erro `crypto.getRandomValues() while prerendering` em TODA página autenticada (vinha do token CSRF que o Auth.js gera dentro de `auth()`; a página saía certa mas o log enchia). Páginas e layouts de servidor usam `sessaoDoServidor()` (`src/lib/sessao.ts`, faz `await connection()` antes do `auth()`); rotas de API continuam com `auth()`. **Em componente de servidor novo, use `sessaoDoServidor()`.**
+- Aviso do `pg` sobre `sslmode=require` a cada conexão: `src/lib/prisma.ts` declara `verify-full` (mesmo comportamento, sem ruído).
+
+**Segurança — conferido e OK**
+- Produção: HSTS, CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`; sem `X-Powered-By`. Páginas protegidas sem sessão: 307 para `/login`. `POST /api/admin/usuarios` e `/api/admin/brand/upload` sem sessão: 403; `/api/treino-do-dia/*`: 401; `/api/aquecer` sem segredo: 401; `/register` e `/api/register`: 404.
+- Todas as rotas de escrita usam o `userId` da sessão (nada vem do corpo): treino iniciar/concluir (+rate limit), nutrição, admin (checagem de admin no servidor), upload de marca (tipos fixos, 8 MB, prefixo `brand/`).
+- Nenhum vazamento entre usuários nas páginas em cache parcial (PPR): dois usuários abrindo `/dashboard` veem só os próprios dados; o casco servido pelo CDN não tem nome nem email.
+- Repositório público limpo: nenhum `.env`, `CLAUDE.local.md`, backup ou mídia versionados; varredura de padrões de segredo (tokens GitHub/Vercel/Blob, chaves privadas, URLs de banco com senha) em arquivos e no histórico: só valores falsos do CI.
+- CORS `*` existe só na rota pública e estática de exercícios (não há cookie nem dado pessoal nela).
+
+**Pontos de observação / melhorias (por prioridade)**
+1. **Sessão dura 30 dias (padrão do Auth.js, JWT) e não há revogação**: quem for removido continua logado até expirar. Ao criar "remover usuário", fazer a sessão conferir se o usuário ainda existe (ou encurtar `session.maxAge` para 7–14 dias).
+2. **`/api/nutrition` não tem rate limit** (as outras rotas de escrita têm). Acrescentar.
+3. **Backups só manuais** (`node scripts/backup-db.cjs --prod`); o Neon Free tem janela curta de restauração. Agendar um backup periódico (guardado fora do git) antes de ter dados reais de várias pessoas.
+4. **Preview e Development da Vercel usam as variáveis de produção** (banco e `AUTH_SECRET`). Hoje só deployamos produção; se usar preview, criar variáveis próprias.
+5. **Login**: o bloqueio por rate limit não avisa o usuário (erro genérico); sem 2FA; senha só com mínimo de 8 (a criação pelo admin exige letra e número). Sem log de auditoria das ações do admin.
+6. **CSP mantém `'unsafe-inline'` em scripts** (necessário ao Next; CSP com nonce exigiria render dinâmico e quebraria o casco estático do PPR). Aceito conscientemente.
+7. **`npm audit`: 4 avisos altos** vindos de `prisma` -> `mysql2` (ferramenta de CLI, não usada em produção; a correção sugerida faz downgrade do Prisma para 6, não rodar `--force`). Rever quando o Prisma 7 publicar correção.
+8. **SVG é aceito no upload de marca** (só admin, servido do domínio do Blob e usado como imagem, onde scripts não executam). Se quiser fechar, tire `image/svg+xml` de `ALLOWED_TYPES`.
+9. O Prisma imprime no log do servidor o erro P2002 mesmo quando o código o trata (ruído conhecido do primeiro acesso).
+
+**Fluidez — medido em produção**
+- `/login` (Lighthouse mobile): desempenho 96, acessibilidade 98, boas práticas 100, SEO 100; FCP 1,0 s, LCP 1,8 s, TBT 130 ms, CLS 0, 251 KiB.
+- Páginas autenticadas com tudo quente: 280–540 ms até o fim do HTML (primeiro pedaço do casco em ~125 ms). Primeira abertura depois de ocioso: `/dashboard` ~2,5 s (boot da função + Neon dormindo); alguns picos de 1,5–1,8 s em `/calendario` logo após deploy. É o limite do Neon Free + Vercel Hobby (ver "Aquecimento"); fora das janelas de aquecimento continua frio.
+- Melhorias possíveis: (a) ajustar as janelas de aquecimento aos horários reais de treino (falta o Mestre informar); (b) Neon Launch (~US$ 19/mês sempre ligado) só se o frio incomodar; (c) `/exercicios` entrega 136 KB de HTML com os 161 itens: se crescer, paginar no servidor; (d) as telas de login e inicial não têm `<main>` (única falha de acessibilidade do Lighthouse); (e) o `proxy.ts` ainda é uma função separada que atrasa o casco frio.
+
 ### Últimas alterações (2026-10-12)
 1. Auditoria completa (build, lint, migrations, rotas protegidas, `npm audit`) e correção dos 2 erros de lint (`conquistas` com `Date.now()` virou `accountAgeInDays()`; `WorkoutForm` com `eslint-disable` justificado).
 2. Hardening de segurança (seção acima) e deploy.
